@@ -7,6 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 <style>
   * { box-sizing: border-box; }
   html, body {
@@ -23,7 +24,7 @@
     background: #3a3a2c;
     padding: 16px;
     border-radius: 22px;
-    width: min(440px, 94vw);
+    width: min(460px, 94vw);
     box-shadow: inset 0 0 0 2px #21221a, 0 10px 30px rgba(0,0,0,0.6);
     border: 1px solid #15150f;
   }
@@ -87,8 +88,8 @@
   .tab {
     flex: 1;
     text-align: center;
-    font-size: 13px;
-    letter-spacing: 2px;
+    font-size: 12px;
+    letter-spacing: 1.5px;
     padding: 7px 0;
     cursor: pointer;
     color: #2bff9c;
@@ -143,7 +144,7 @@
     padding: 8px 4px;
     text-align: center;
   }
-  .bigtemp { font-size: 40px; line-height: 1; }
+  .bigtemp { font-size: 52px; line-height: 1; }
   .station {
     display: flex;
     justify-content: space-between;
@@ -188,9 +189,10 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 18px;
+    gap: 14px;
     margin-top: 16px;
     padding: 4px 0;
+    flex-wrap: wrap;
   }
   .dots { display: flex; gap: 10px; }
   .dot {
@@ -225,6 +227,47 @@
     transition: transform 250ms;
   }
   #yt-player { display: none; }
+  #leaflet-map {
+    height: 280px;
+    border: 1px solid #1f6b46;
+    filter: grayscale(1) brightness(0.9) sepia(1) hue-rotate(70deg) saturate(4) contrast(1.1) invert(1);
+  }
+  .leaflet-popup-content-wrapper, .leaflet-popup-tip {
+    background: #0a0e0a;
+    color: #2bff9c;
+    border: 1px solid #2bff9c;
+    border-radius: 0;
+    box-shadow: none;
+  }
+  .leaflet-popup-content {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 12px;
+    margin: 8px 10px;
+  }
+  .leaflet-control-zoom a {
+    background: #0a0e0a;
+    color: #2bff9c;
+    border: 1px solid #1f6b46;
+  }
+  .blip-marker {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: #2bff9c;
+    box-shadow: 0 0 8px #2bff9c, 0 0 2px #2bff9c;
+    border: 1px solid #0a0e0a;
+  }
+  .hum-toggle {
+    font-size: 10px;
+    letter-spacing: 1px;
+    color: #4f8a6a;
+    border: 1px solid #1f6b46;
+    padding: 6px 8px;
+    cursor: pointer;
+    user-select: none;
+    white-space: nowrap;
+  }
+  .hum-toggle.on { color: #2bff9c; border-color: #2bff9c; }
 </style>
 </head>
 <body>
@@ -242,6 +285,7 @@
       <div class="tabs">
         <div class="tab active" data-tab="stat">STAT</div>
         <div class="tab" data-tab="data">DATA</div>
+        <div class="tab" data-tab="map">MAP</div>
         <div class="tab" data-tab="radio">RADIO</div>
       </div>
 
@@ -267,6 +311,12 @@
         <div class="footer-note" id="weather-updated"></div>
       </div>
 
+      <div class="panel" id="panel-map">
+        <div style="border-bottom:1px solid #1f6b46; padding-bottom:8px; margin-bottom:14px;">WORLD MAP</div>
+        <div id="leaflet-map"></div>
+        <div class="footer-note">tap a marker for coordinates</div>
+      </div>
+
       <div class="panel" id="panel-radio">
         <div style="border-bottom:1px solid #1f6b46; padding-bottom:8px; margin-bottom:16px;">RADIO</div>
         <div class="station tuned" id="station-rnv" data-freq="104.3">
@@ -289,15 +339,18 @@
     <div class="dots">
       <div class="dot active" data-tab="stat"></div>
       <div class="dot" data-tab="data"></div>
+      <div class="dot" data-tab="map"></div>
       <div class="dot" data-tab="radio"></div>
     </div>
     <div class="knob" id="knob">
       <div class="knob-indicator" id="knob-indicator"></div>
     </div>
+    <div class="hum-toggle" id="hum-toggle" title="ambient hum">HUM: ON</div>
   </div>
 </div>
 
 <script src="https://www.youtube.com/iframe_api"></script>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
 const SPECIAL = [
   { key: "S", name: "Strength", value: 4, blurb: "Carries the load. Not where the points went." },
@@ -387,21 +440,21 @@ async function loadWeather() {
       const rain = data.daily.precipitation_probability_max[i];
       forecastHtml += `
         <div class="forecast-cell">
-          <div class="dim" style="font-size:11px;">${dayLabel}</div>
-          <div style="font-size:16px; margin:4px 0;">${high}°</div>
-          <div class="dim" style="font-size:10px;">${rain}% rain</div>
+          <div class="dim" style="font-size:12px;">${dayLabel}</div>
+          <div style="font-size:20px; margin:5px 0;">${high}°</div>
+          <div class="dim" style="font-size:11px;">${rain}% rain</div>
         </div>`;
     }
 
     body.innerHTML = `
-      <div class="row" style="align-items:baseline; margin-bottom:4px;">
+      <div class="row" style="align-items:baseline; margin-bottom:6px;">
         <span class="bigtemp">${curTemp}°</span>
-        <span style="font-size:14px;">${curText.toUpperCase()}</span>
+        <span style="font-size:16px;">${curText.toUpperCase()}</span>
       </div>
-      <div class="muted" style="font-size:12px; margin-bottom:18px;">
+      <div class="muted" style="font-size:13px; margin-bottom:20px;">
         Baton Rouge, LA — high ${todayHigh}° — precip chance ${todayPrecip}%
       </div>
-      <div style="font-size:13px; margin-bottom:8px; border-top:1px solid #1f6b46; padding-top:12px;">4-DAY OUTLOOK</div>
+      <div style="font-size:14px; margin-bottom:10px; border-top:1px solid #1f6b46; padding-top:12px;">4-DAY OUTLOOK</div>
       <div class="forecast-grid">${forecastHtml}</div>
     `;
     updated.textContent = "signal acquired — last sync " + new Date().toLocaleTimeString();
@@ -422,7 +475,7 @@ function updateClock() {
 const tabs = document.querySelectorAll(".tab");
 const dots = document.querySelectorAll(".dot");
 const panels = document.querySelectorAll(".panel");
-const tabOrder = ["stat", "data", "radio"];
+const tabOrder = ["stat", "data", "map", "radio"];
 const knobIndicator = document.getElementById("knob-indicator");
 
 function setTab(name) {
@@ -430,7 +483,10 @@ function setTab(name) {
   dots.forEach(d => d.classList.toggle("active", d.dataset.tab === name));
   panels.forEach(p => p.classList.toggle("active", p.id === "panel-" + name));
   const idx = tabOrder.indexOf(name);
-  knobIndicator.style.transform = `translateX(-50%) rotate(${idx * 120}deg)`;
+  knobIndicator.style.transform = `translateX(-50%) rotate(${idx * 90}deg)`;
+  if (name === "map" && map) {
+    setTimeout(() => map.invalidateSize(), 50);
+  }
 }
 
 tabs.forEach(t => t.addEventListener("click", () => setTab(t.dataset.tab)));
@@ -486,6 +542,7 @@ document.getElementById("station-rnv").addEventListener("click", () => {
     document.getElementById("transmission-text").textContent = "...acquiring signal...";
     return;
   }
+  playStaticBurst();
   if (isPlaying) {
     ytPlayer.pauseVideo();
   } else {
@@ -516,8 +573,94 @@ document.getElementById("btn-mute").addEventListener("click", (e) => {
   isMuted = !isMuted;
 });
 
+let map = null;
+function initMap() {
+  const LOCATIONS = [
+    { name: "HOME — Baton Rouge, LA", lat: 30.4515, lon: -91.1871 },
+    { name: "Colorado Springs, CO", lat: 38.8339, lon: -104.8214 },
+    { name: "Pikes Peak Summit", lat: 38.8409, lon: -105.0423 }
+  ];
+  map = L.map('leaflet-map', { zoomControl: true, attributionControl: false }).setView([34.5, -98], 4);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    maxZoom: 18
+  }).addTo(map);
+
+  LOCATIONS.forEach(loc => {
+    const icon = L.divIcon({ className: 'blip-marker', iconSize: [12, 12] });
+    L.marker([loc.lat, loc.lon], { icon })
+      .addTo(map)
+      .bindPopup(`${loc.name}<br>${loc.lat.toFixed(4)}, ${loc.lon.toFixed(4)}`);
+  });
+}
+
+let audioCtx = null;
+let humOsc = null;
+let humGain = null;
+let humOn = true;
+let humStarted = false;
+
+function ensureAudioCtx() {
+  if (!audioCtx) {
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  }
+  if (audioCtx.state === "suspended") {
+    audioCtx.resume();
+  }
+}
+
+function startHum() {
+  ensureAudioCtx();
+  if (humStarted) return;
+  humOsc = audioCtx.createOscillator();
+  humGain = audioCtx.createGain();
+  humOsc.type = "sine";
+  humOsc.frequency.value = 82;
+  humGain.gain.value = humOn ? 0.012 : 0;
+  humOsc.connect(humGain);
+  humGain.connect(audioCtx.destination);
+  humOsc.start();
+  humStarted = true;
+}
+
+function playStaticBurst() {
+  ensureAudioCtx();
+  const bufferSize = audioCtx.sampleRate * 0.4;
+  const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+  const data = buffer.getChannelData(0);
+  for (let i = 0; i < bufferSize; i++) {
+    data[i] = (Math.random() * 2 - 1) * (1 - i / bufferSize);
+  }
+  const noise = audioCtx.createBufferSource();
+  noise.buffer = buffer;
+  const filter = audioCtx.createBiquadFilter();
+  filter.type = "bandpass";
+  filter.frequency.value = 1800;
+  const gain = audioCtx.createGain();
+  gain.gain.value = 0.18;
+  noise.connect(filter);
+  filter.connect(gain);
+  gain.connect(audioCtx.destination);
+  noise.start();
+}
+
+document.body.addEventListener("click", () => {
+  startHum();
+}, { once: true });
+
+const humToggle = document.getElementById("hum-toggle");
+humToggle.addEventListener("click", () => {
+  humOn = !humOn;
+  if (humGain) {
+    humGain.gain.value = humOn ? 0.012 : 0;
+  }
+  humToggle.textContent = humOn ? "HUM: ON" : "HUM: OFF";
+  humToggle.classList.toggle("on", humOn);
+});
+humToggle.classList.add("on");
+
 renderStats();
 loadWeather();
+initMap();
 setInterval(loadWeather, 15 * 60 * 1000);
 updateClock();
 setInterval(updateClock, 1000);
