@@ -1,0 +1,527 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<title>PIP-BOY 3000</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0;
+    padding: 0;
+    background: #181812;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Share Tech Mono', 'Courier New', monospace;
+  }
+  .device {
+    background: #3a3a2c;
+    padding: 16px;
+    border-radius: 22px;
+    width: min(440px, 94vw);
+    box-shadow: inset 0 0 0 2px #21221a, 0 10px 30px rgba(0,0,0,0.6);
+    border: 1px solid #15150f;
+  }
+  .screws {
+    display: flex;
+    justify-content: space-between;
+    padding: 2px 8px 10px;
+  }
+  .screw {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #15150f;
+    box-shadow: inset 0 0 2px #000;
+  }
+  .screen {
+    background: #0a0e0a;
+    border: 3px solid #21221a;
+    border-radius: 6px;
+    padding: 14px;
+    position: relative;
+    overflow: hidden;
+    min-height: 420px;
+  }
+  .scanlines {
+    position: absolute;
+    inset: 0;
+    background-image: repeating-linear-gradient(0deg, rgba(43,255,156,0.05) 0px, rgba(43,255,156,0.05) 1px, transparent 1px, transparent 3px);
+    pointer-events: none;
+    z-index: 2;
+    animation: flicker 6s infinite;
+  }
+  .vignette {
+    position: absolute;
+    inset: 0;
+    box-shadow: inset 0 0 50px rgba(0,0,0,0.85);
+    pointer-events: none;
+    z-index: 2;
+  }
+  @keyframes flicker {
+    0%, 100% { opacity: 1; }
+    92% { opacity: 1; }
+    93% { opacity: 0.85; }
+    94% { opacity: 1; }
+  }
+  .content {
+    position: relative;
+    z-index: 1;
+    color: #2bff9c;
+    text-shadow: 0 0 4px #2bff9c, 0 0 10px rgba(43,255,156,0.35);
+    font-size: 13px;
+    line-height: 1.5;
+  }
+  .tabs {
+    display: flex;
+    gap: 4px;
+    margin-bottom: 16px;
+    border-bottom: 1px solid #1f6b46;
+    padding-bottom: 0;
+  }
+  .tab {
+    flex: 1;
+    text-align: center;
+    font-size: 13px;
+    letter-spacing: 2px;
+    padding: 7px 0;
+    cursor: pointer;
+    color: #2bff9c;
+    background: transparent;
+    transition: background 150ms, color 150ms;
+    user-select: none;
+  }
+  .tab.active {
+    color: #0a0e0a;
+    background: #2bff9c;
+  }
+  .panel { display: none; }
+  .panel.active { display: block; }
+  .row { display: flex; justify-content: space-between; }
+  .muted { color: #6fae8a; }
+  .dim { color: #4f8a6a; }
+  .divider { border-top: 1px solid #1f6b46; margin: 14px 0; padding-top: 12px; }
+  .statbar-wrap { margin-bottom: 14px; cursor: pointer; }
+  .statbar-track {
+    height: 10px;
+    border: 1px solid #1f6b46;
+    background: #05130b;
+    margin-top: 4px;
+    position: relative;
+    overflow: hidden;
+  }
+  .statbar-fill {
+    height: 100%;
+    width: 0%;
+    background: repeating-linear-gradient(90deg, #2bff9c 0 6px, #1c9e63 6px 8px);
+    transition: width 900ms cubic-bezier(.2,.8,.2,1);
+    box-shadow: 0 0 6px #2bff9c;
+  }
+  .statblurb {
+    font-size: 12px;
+    color: #7be8b5;
+    border-left: 2px solid #1c9e63;
+    padding-left: 8px;
+    margin-top: 6px;
+    display: none;
+  }
+  .statblurb.show { display: block; }
+  .perk { font-size: 12px; margin-bottom: 8px; }
+  .perk-desc { color: #6fae8a; margin-left: 14px; }
+  .forecast-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+  }
+  .forecast-cell {
+    border: 1px solid #1f6b46;
+    padding: 8px 4px;
+    text-align: center;
+  }
+  .bigtemp { font-size: 40px; line-height: 1; }
+  .station {
+    display: flex;
+    justify-content: space-between;
+    padding: 9px 10px;
+    border: 1px solid #1f6b46;
+    cursor: pointer;
+    font-size: 12px;
+    margin-bottom: 8px;
+    transition: background 150ms, border-color 150ms;
+  }
+  .station.tuned {
+    border-color: #2bff9c;
+    background: rgba(43,255,156,0.08);
+  }
+  .station .status { color: #4f8a6a; }
+  .station.tuned .status { color: #2bff9c; }
+  .transmission {
+    border: 1px solid #1f6b46;
+    padding: 12px;
+    min-height: 50px;
+    font-size: 12px;
+  }
+  .radio-controls {
+    display: flex;
+    gap: 8px;
+    margin-top: 12px;
+  }
+  .radio-btn {
+    flex: 1;
+    text-align: center;
+    border: 1px solid #1f6b46;
+    padding: 8px 0;
+    font-size: 12px;
+    cursor: pointer;
+    background: transparent;
+    color: #2bff9c;
+    font-family: inherit;
+  }
+  .radio-btn:active { background: rgba(43,255,156,0.12); }
+  .footer-note { margin-top: 16px; font-size: 11px; color: #4f8a6a; }
+  .bottombar {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 18px;
+    margin-top: 16px;
+    padding: 4px 0;
+  }
+  .dots { display: flex; gap: 10px; }
+  .dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: #5a5a48;
+    cursor: pointer;
+    transition: background 200ms, box-shadow 200ms;
+  }
+  .dot.active {
+    background: #2bff9c;
+    box-shadow: 0 0 6px #2bff9c;
+  }
+  .knob {
+    width: 46px;
+    height: 46px;
+    border-radius: 50%;
+    background: radial-gradient(circle at 35% 30%, #5a5a48, #2c2c22);
+    border: 2px solid #1a1a14;
+    position: relative;
+    cursor: pointer;
+  }
+  .knob-indicator {
+    position: absolute;
+    top: 4px;
+    left: 50%;
+    width: 3px;
+    height: 14px;
+    background: #0a0e0a;
+    transform-origin: 50% 19px;
+    transition: transform 250ms;
+  }
+  #yt-player { display: none; }
+</style>
+</head>
+<body>
+
+<div class="device">
+  <div class="screws">
+    <div class="screw"></div><div class="screw"></div><div class="screw"></div><div class="screw"></div>
+  </div>
+
+  <div class="screen">
+    <div class="scanlines"></div>
+    <div class="vignette"></div>
+    <div class="content">
+
+      <div class="tabs">
+        <div class="tab active" data-tab="stat">STAT</div>
+        <div class="tab" data-tab="data">DATA</div>
+        <div class="tab" data-tab="radio">RADIO</div>
+      </div>
+
+      <div class="panel active" id="panel-stat">
+        <div class="row" style="border-bottom:1px solid #1f6b46; padding-bottom:8px; margin-bottom:16px;">
+          <span>VAULT DWELLER STATUS</span>
+          <span id="special-total">SPECIAL TOTAL: 43</span>
+        </div>
+        <div id="stat-list"></div>
+        <div class="divider">
+          <div style="margin-bottom:8px;">PERKS</div>
+          <div id="perk-list"></div>
+        </div>
+        <div class="footer-note">tap a stat for details</div>
+      </div>
+
+      <div class="panel" id="panel-data">
+        <div style="border-bottom:1px solid #1f6b46; padding-bottom:8px; margin-bottom:16px;">
+          <div>SURFACE CONDITIONS</div>
+          <div class="dim" id="datetime" style="font-size:11px; margin-top:2px;"></div>
+        </div>
+        <div id="weather-body">ACQUIRING SIGNAL...</div>
+        <div class="footer-note" id="weather-updated"></div>
+      </div>
+
+      <div class="panel" id="panel-radio">
+        <div style="border-bottom:1px solid #1f6b46; padding-bottom:8px; margin-bottom:16px;">RADIO</div>
+        <div class="station tuned" id="station-rnv" data-freq="104.3">
+          <span>104.3 MHz — RADIO NEW VEGAS</span>
+          <span class="status">● STANDBY</span>
+        </div>
+        <div class="transmission" id="transmission-text">tap the frequency to tune in...</div>
+        <div class="radio-controls">
+          <div class="radio-btn" id="btn-playpause">▶ PLAY</div>
+          <div class="radio-btn" id="btn-mute">MUTE</div>
+        </div>
+        <div id="yt-player"></div>
+        <div class="footer-note">audio requires a tap to start on mobile browsers</div>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="bottombar">
+    <div class="dots">
+      <div class="dot active" data-tab="stat"></div>
+      <div class="dot" data-tab="data"></div>
+      <div class="dot" data-tab="radio"></div>
+    </div>
+    <div class="knob" id="knob">
+      <div class="knob-indicator" id="knob-indicator"></div>
+    </div>
+  </div>
+</div>
+
+<script src="https://www.youtube.com/iframe_api"></script>
+<script>
+const SPECIAL = [
+  { key: "S", name: "Strength", value: 4, blurb: "Carries the load. Not where the points went." },
+  { key: "P", name: "Perception", value: 9, blurb: "Reads a room before it speaks." },
+  { key: "E", name: "Endurance", value: 5, blurb: "Steady. Not the headline stat, never the failure point." },
+  { key: "C", name: "Charisma", value: 6, blurb: "Selective deployment. Trust earned slowly, given fully." },
+  { key: "I", name: "Intelligence", value: 9, blurb: "Formulation, systems, synthesis. The main stat." },
+  { key: "A", name: "Agility", value: 5, blurb: "Unremarkable, unremarked upon." },
+  { key: "L", name: "Luck", value: 5, blurb: "Unmeasured. The wildcard stays a wildcard." }
+];
+
+const PERKS = [
+  { name: "Lone Wanderer", desc: "Small trust circle. Operates best with full autonomy and no hand-holding." },
+  { name: "Chemist", desc: "Formulation work across beverages, gummies, and seasoning blends. pH, kill steps, and inclusion math on command." },
+  { name: "Built Different", desc: "Corrections-forged systemic empathy. Reads people accurately, judges them slowly." },
+  { name: "Wanderer's Creed", desc: "Aspires to leave places, and people, better than it found them." }
+];
+
+const BR_LAT = 30.4515;
+const BR_LON = -91.1871;
+const YT_VIDEO_ID = "kXfQ7AB-hEM";
+
+function renderStats() {
+  const list = document.getElementById("stat-list");
+  list.innerHTML = "";
+  SPECIAL.forEach((s, idx) => {
+    const wrap = document.createElement("div");
+    wrap.className = "statbar-wrap";
+    wrap.innerHTML = `
+      <div class="row"><span>${s.key} — ${s.name.toUpperCase()}</span><span>${s.value}/10</span></div>
+      <div class="statbar-track"><div class="statbar-fill" id="fill-${s.key}"></div></div>
+      <div class="statblurb" id="blurb-${s.key}">${s.blurb}</div>
+    `;
+    wrap.addEventListener("click", () => {
+      document.getElementById(`blurb-${s.key}`).classList.toggle("show");
+    });
+    list.appendChild(wrap);
+    setTimeout(() => {
+      const fill = document.getElementById(`fill-${s.key}`);
+      if (fill) fill.style.width = (s.value / 10 * 100) + "%";
+    }, idx * 120);
+  });
+
+  const perkList = document.getElementById("perk-list");
+  perkList.innerHTML = "";
+  PERKS.forEach((p) => {
+    const div = document.createElement("div");
+    div.className = "perk";
+    div.innerHTML = `<span style="color:#2bff9c;">▸ ${p.name}</span><div class="perk-desc">${p.desc}</div>`;
+    perkList.appendChild(div);
+  });
+}
+
+function weatherCodeToText(code) {
+  const map = {
+    0: "Clear sky", 1: "Mainly clear", 2: "Partly cloudy", 3: "Overcast",
+    45: "Fog", 48: "Freezing fog",
+    51: "Light drizzle", 53: "Drizzle", 55: "Dense drizzle",
+    61: "Light rain", 63: "Rain", 65: "Heavy rain",
+    71: "Light snow", 73: "Snow", 75: "Heavy snow",
+    80: "Light showers", 81: "Showers", 82: "Violent showers",
+    95: "Thunderstorm", 96: "Thunderstorm w/ hail", 99: "Severe thunderstorm"
+  };
+  return map[code] || "Unknown";
+}
+
+async function loadWeather() {
+  const body = document.getElementById("weather-body");
+  const updated = document.getElementById("weather-updated");
+  try {
+    const url = `https://api.open-meteo.com/v1/forecast?latitude=${BR_LAT}&longitude=${BR_LON}&current=temperature_2m,weather_code&daily=temperature_2m_max,precipitation_probability_max,weather_code&temperature_unit=fahrenheit&timezone=auto`;
+    const res = await fetch(url);
+    if (!res.ok) throw new Error("fetch failed");
+    const data = await res.json();
+
+    const curTemp = Math.round(data.current.temperature_2m);
+    const curText = weatherCodeToText(data.current.weather_code);
+    const todayHigh = Math.round(data.daily.temperature_2m_max[0]);
+    const todayPrecip = data.daily.precipitation_probability_max[0];
+
+    let forecastHtml = "";
+    for (let i = 1; i <= 4; i++) {
+      if (!data.daily.time[i]) continue;
+      const d = new Date(data.daily.time[i] + "T00:00:00");
+      const dayLabel = d.toLocaleDateString(undefined, { weekday: "short" });
+      const high = Math.round(data.daily.temperature_2m_max[i]);
+      const rain = data.daily.precipitation_probability_max[i];
+      forecastHtml += `
+        <div class="forecast-cell">
+          <div class="dim" style="font-size:11px;">${dayLabel}</div>
+          <div style="font-size:16px; margin:4px 0;">${high}°</div>
+          <div class="dim" style="font-size:10px;">${rain}% rain</div>
+        </div>`;
+    }
+
+    body.innerHTML = `
+      <div class="row" style="align-items:baseline; margin-bottom:4px;">
+        <span class="bigtemp">${curTemp}°</span>
+        <span style="font-size:14px;">${curText.toUpperCase()}</span>
+      </div>
+      <div class="muted" style="font-size:12px; margin-bottom:18px;">
+        Baton Rouge, LA — high ${todayHigh}° — precip chance ${todayPrecip}%
+      </div>
+      <div style="font-size:13px; margin-bottom:8px; border-top:1px solid #1f6b46; padding-top:12px;">4-DAY OUTLOOK</div>
+      <div class="forecast-grid">${forecastHtml}</div>
+    `;
+    updated.textContent = "signal acquired — last sync " + new Date().toLocaleTimeString();
+  } catch (e) {
+    body.innerHTML = `<div class="muted">SIGNAL LOST. Unable to reach weather network.</div>`;
+    updated.textContent = "retry in progress...";
+    setTimeout(loadWeather, 15000);
+  }
+}
+
+function updateClock() {
+  const now = new Date();
+  const dateStr = now.toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric", year: "numeric" });
+  const timeStr = now.toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit", second: "2-digit" });
+  document.getElementById("datetime").textContent = dateStr + " // " + timeStr;
+}
+
+const tabs = document.querySelectorAll(".tab");
+const dots = document.querySelectorAll(".dot");
+const panels = document.querySelectorAll(".panel");
+const tabOrder = ["stat", "data", "radio"];
+const knobIndicator = document.getElementById("knob-indicator");
+
+function setTab(name) {
+  tabs.forEach(t => t.classList.toggle("active", t.dataset.tab === name));
+  dots.forEach(d => d.classList.toggle("active", d.dataset.tab === name));
+  panels.forEach(p => p.classList.toggle("active", p.id === "panel-" + name));
+  const idx = tabOrder.indexOf(name);
+  knobIndicator.style.transform = `translateX(-50%) rotate(${idx * 120}deg)`;
+}
+
+tabs.forEach(t => t.addEventListener("click", () => setTab(t.dataset.tab)));
+dots.forEach(d => d.addEventListener("click", () => setTab(d.dataset.tab)));
+document.getElementById("knob").addEventListener("click", () => {
+  const current = document.querySelector(".tab.active").dataset.tab;
+  const idx = tabOrder.indexOf(current);
+  setTab(tabOrder[(idx + 1) % tabOrder.length]);
+});
+
+let ytPlayer = null;
+let ytReady = false;
+let isPlaying = false;
+let isMuted = false;
+
+function onYouTubeIframeAPIReady() {
+  ytPlayer = new YT.Player('yt-player', {
+    height: '1',
+    width: '1',
+    videoId: YT_VIDEO_ID,
+    playerVars: { autoplay: 0, controls: 0 },
+    events: {
+      'onReady': () => { ytReady = true; },
+      'onStateChange': onPlayerStateChange
+    }
+  });
+}
+window.onYouTubeIframeAPIReady = onYouTubeIframeAPIReady;
+
+function onPlayerStateChange(event) {
+  const station = document.getElementById("station-rnv");
+  const statusEl = station.querySelector(".status");
+  const transmission = document.getElementById("transmission-text");
+  const playBtn = document.getElementById("btn-playpause");
+
+  if (event.data === YT.PlayerState.PLAYING) {
+    isPlaying = true;
+    station.classList.add("tuned");
+    statusEl.textContent = "● TUNED";
+    transmission.textContent = "...signal locked. transmission clear. holding frequency 104.3...";
+    playBtn.textContent = "❙❙ PAUSE";
+  } else if (event.data === YT.PlayerState.PAUSED) {
+    isPlaying = false;
+    statusEl.textContent = "● HOLDING";
+    playBtn.textContent = "▶ PLAY";
+  } else if (event.data === YT.PlayerState.BUFFERING) {
+    transmission.textContent = "...retuning...";
+  }
+}
+
+document.getElementById("station-rnv").addEventListener("click", () => {
+  if (!ytReady) {
+    document.getElementById("transmission-text").textContent = "...acquiring signal...";
+    return;
+  }
+  if (isPlaying) {
+    ytPlayer.pauseVideo();
+  } else {
+    ytPlayer.playVideo();
+  }
+});
+
+document.getElementById("btn-playpause").addEventListener("click", (e) => {
+  e.stopPropagation();
+  if (!ytReady) return;
+  if (isPlaying) {
+    ytPlayer.pauseVideo();
+  } else {
+    ytPlayer.playVideo();
+  }
+});
+
+document.getElementById("btn-mute").addEventListener("click", (e) => {
+  e.stopPropagation();
+  if (!ytReady) return;
+  if (isMuted) {
+    ytPlayer.unMute();
+    document.getElementById("btn-mute").textContent = "MUTE";
+  } else {
+    ytPlayer.mute();
+    document.getElementById("btn-mute").textContent = "UNMUTE";
+  }
+  isMuted = !isMuted;
+});
+
+renderStats();
+loadWeather();
+setInterval(loadWeather, 15 * 60 * 1000);
+updateClock();
+setInterval(updateClock, 1000);
+</script>
+
+</body>
+</html>
