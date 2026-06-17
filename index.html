@@ -230,7 +230,8 @@
   #leaflet-map {
     height: 280px;
     border: 1px solid #1f6b46;
-    filter: grayscale(1) brightness(1.6) sepia(1) saturate(6) hue-rotate(60deg) brightness(0.75) contrast(1.15);
+    background: #0a0e0a;
+    filter: sepia(1) saturate(3) hue-rotate(65deg) brightness(1.1);
   }
   .leaflet-popup-content-wrapper, .leaflet-popup-tip {
     background: #0a0e0a;
@@ -249,11 +250,15 @@
     color: #2bff9c;
     border: 1px solid #1f6b46;
   }
+  .leaflet-div-icon {
+    background: transparent !important;
+    border: none !important;
+  }
   .blip-marker {
     width: 12px;
     height: 12px;
     border-radius: 50%;
-    background: #2bff9c;
+    background: #2bff9c !important;
     box-shadow: 0 0 8px #2bff9c, 0 0 2px #2bff9c;
     border: 1px solid #0a0e0a;
   }
@@ -581,8 +586,9 @@ function initMap() {
     { name: "Pikes Peak Summit", lat: 38.8409, lon: -105.0423 }
   ];
   map = L.map('leaflet-map', { zoomControl: true, attributionControl: false }).setView([34.5, -98], 4);
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    maxZoom: 18
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+    maxZoom: 18,
+    subdomains: 'abcd'
   }).addTo(map);
 
   LOCATIONS.forEach(loc => {
