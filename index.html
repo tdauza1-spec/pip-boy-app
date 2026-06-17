@@ -30,19 +30,21 @@
   }
   .case-label {
     text-align: center;
-    font-size: 11px;
-    letter-spacing: 3px;
-    color: #4a4a3a;
-    text-shadow: 0 1px 0 rgba(0,0,0,0.5), 0 -1px 0 rgba(255,255,255,0.06);
-    padding: 6px 0 2px;
+    font-size: 17px;
+    font-weight: bold;
+    letter-spacing: 4px;
+    color: #6b6b54;
+    text-shadow: 0 1px 0 rgba(0,0,0,0.6), 0 -1px 0 rgba(255,255,255,0.1);
+    padding: 8px 0 3px;
     user-select: none;
   }
   .case-label-sub {
     display: block;
-    font-size: 8px;
-    letter-spacing: 4px;
-    color: #3d3d2f;
-    margin-top: 2px;
+    font-size: 10px;
+    font-weight: normal;
+    letter-spacing: 5px;
+    color: #5a5a46;
+    margin-top: 3px;
   }
   .screws {
     display: flex;
@@ -927,17 +929,17 @@ function runBootSequence() {
       rendered += line[charIndex];
       charIndex++;
       textEl.innerHTML = rendered + '<span class="boot-cursor"></span>';
-      setTimeout(typeNext, 8);
+      setTimeout(typeNext, 22);
     } else {
       rendered += "\n";
       lineIndex++;
       charIndex = 0;
-      setTimeout(typeNext, 90);
+      setTimeout(typeNext, 220);
     }
   }
   typeNext();
 
-  setTimeout(finishBoot, 6000);
+  setTimeout(finishBoot, 9000);
 }
 
 runBootSequence();
