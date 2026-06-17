@@ -28,6 +28,22 @@
     box-shadow: inset 0 0 0 2px #21221a, 0 10px 30px rgba(0,0,0,0.6);
     border: 1px solid #15150f;
   }
+  .case-label {
+    text-align: center;
+    font-size: 11px;
+    letter-spacing: 3px;
+    color: #4a4a3a;
+    text-shadow: 0 1px 0 rgba(0,0,0,0.5), 0 -1px 0 rgba(255,255,255,0.06);
+    padding: 6px 0 2px;
+    user-select: none;
+  }
+  .case-label-sub {
+    display: block;
+    font-size: 8px;
+    letter-spacing: 4px;
+    color: #3d3d2f;
+    margin-top: 2px;
+  }
   .screws {
     display: flex;
     justify-content: space-between;
@@ -69,6 +85,45 @@
     92% { opacity: 1; }
     93% { opacity: 0.85; }
     94% { opacity: 1; }
+  }
+  .boot-overlay {
+    position: absolute;
+    inset: 0;
+    background: #0a0e0a;
+    z-index: 10;
+    padding: 16px;
+    cursor: pointer;
+    display: flex;
+    align-items: flex-start;
+    opacity: 1;
+    transition: opacity 500ms ease-out;
+  }
+  .boot-overlay.hidden {
+    opacity: 0;
+    pointer-events: none;
+  }
+  .boot-text {
+    margin: 0;
+    color: #2bff9c;
+    text-shadow: 0 0 4px #2bff9c, 0 0 10px rgba(43,255,156,0.35);
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 11px;
+    line-height: 1.6;
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+  .boot-cursor {
+    display: inline-block;
+    width: 7px;
+    height: 12px;
+    background: #2bff9c;
+    margin-left: 2px;
+    animation: blink 0.8s steps(1) infinite;
+    vertical-align: middle;
+  }
+  @keyframes blink {
+    0%, 50% { opacity: 1; }
+    51%, 100% { opacity: 0; }
   }
   .content {
     position: relative;
@@ -145,6 +200,48 @@
     text-align: center;
   }
   .bigtemp { font-size: 52px; line-height: 1; }
+  .home-clock {
+    font-size: 56px;
+    text-align: center;
+    letter-spacing: 2px;
+    margin-top: 8px;
+    margin-bottom: 4px;
+  }
+  .home-date {
+    text-align: center;
+    font-size: 13px;
+    letter-spacing: 2px;
+    color: #6fae8a;
+    margin-bottom: 4px;
+  }
+  .home-weather-row {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    justify-content: center;
+  }
+  .home-weather-icon svg {
+    width: 56px;
+    height: 56px;
+    display: block;
+  }
+  .home-weather-info {
+    text-align: left;
+  }
+  .home-weather-temp {
+    font-size: 36px;
+    line-height: 1;
+  }
+  .home-weather-cond {
+    font-size: 12px;
+    letter-spacing: 1px;
+    margin-top: 4px;
+  }
+  .home-status-line {
+    text-align: center;
+    font-size: 11px;
+    letter-spacing: 2px;
+  }
   .station {
     display: flex;
     justify-content: space-between;
@@ -289,11 +386,15 @@
 <body>
 
 <div class="device">
+  <div class="case-label">PIP-BOY<span class="case-label-sub">PERSONAL</span></div>
   <div class="screws">
     <div class="screw"></div><div class="screw"></div><div class="screw"></div><div class="screw"></div>
   </div>
 
   <div class="screen">
+    <div class="boot-overlay" id="boot-overlay">
+      <pre class="boot-text" id="boot-text"></pre>
+    </div>
     <div class="scanlines"></div>
     <div class="vignette"></div>
     <div class="content">
@@ -306,16 +407,20 @@
       </div>
 
       <div class="panel active" id="panel-stat">
-        <div class="row" style="border-bottom:1px solid #1f6b46; padding-bottom:8px; margin-bottom:16px;">
-          <span>VAULT DWELLER STATUS</span>
-          <span id="special-total">SPECIAL TOTAL: 43</span>
+        <div class="home-clock" id="home-clock">--:--</div>
+        <div class="home-date" id="home-date">LOADING DATE...</div>
+
+        <div class="divider home-weather-row">
+          <div class="home-weather-icon" id="home-weather-icon"></div>
+          <div class="home-weather-info">
+            <div class="home-weather-temp" id="home-weather-temp">--°</div>
+            <div class="home-weather-cond dim" id="home-weather-cond">ACQUIRING SIGNAL</div>
+          </div>
         </div>
-        <div id="stat-list"></div>
+
         <div class="divider">
-          <div style="margin-bottom:8px;">PERKS</div>
-          <div id="perk-list"></div>
+          <div class="home-status-line dim" id="home-status-line">SYSTEM NOMINAL</div>
         </div>
-        <div class="footer-note">tap a stat for details</div>
       </div>
 
       <div class="panel" id="panel-data">
@@ -380,57 +485,9 @@
 <script src="https://www.youtube.com/iframe_api"></script>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
-const SPECIAL = [
-  { key: "S", name: "Strength", value: 4, blurb: "Carries the load. Not where the points went." },
-  { key: "P", name: "Perception", value: 9, blurb: "Reads a room before it speaks." },
-  { key: "E", name: "Endurance", value: 5, blurb: "Steady. Not the headline stat, never the failure point." },
-  { key: "C", name: "Charisma", value: 6, blurb: "Selective deployment. Trust earned slowly, given fully." },
-  { key: "I", name: "Intelligence", value: 9, blurb: "Formulation, systems, synthesis. The main stat." },
-  { key: "A", name: "Agility", value: 5, blurb: "Unremarkable, unremarked upon." },
-  { key: "L", name: "Luck", value: 5, blurb: "Unmeasured. The wildcard stays a wildcard." }
-];
-
-const PERKS = [
-  { name: "Lone Wanderer", desc: "Small trust circle. Operates best with full autonomy and no hand-holding." },
-  { name: "Chemist", desc: "Formulation work across beverages, gummies, and seasoning blends. pH, kill steps, and inclusion math on command." },
-  { name: "Built Different", desc: "Corrections-forged systemic empathy. Reads people accurately, judges them slowly." },
-  { name: "Wanderer's Creed", desc: "Aspires to leave places, and people, better than it found them." }
-];
-
 const BR_LAT = 30.4515;
 const BR_LON = -91.1871;
 const YT_VIDEO_ID = "kXfQ7AB-hEM";
-
-function renderStats() {
-  const list = document.getElementById("stat-list");
-  list.innerHTML = "";
-  SPECIAL.forEach((s, idx) => {
-    const wrap = document.createElement("div");
-    wrap.className = "statbar-wrap";
-    wrap.innerHTML = `
-      <div class="row"><span>${s.key} — ${s.name.toUpperCase()}</span><span>${s.value}/10</span></div>
-      <div class="statbar-track"><div class="statbar-fill" id="fill-${s.key}"></div></div>
-      <div class="statblurb" id="blurb-${s.key}">${s.blurb}</div>
-    `;
-    wrap.addEventListener("click", () => {
-      document.getElementById(`blurb-${s.key}`).classList.toggle("show");
-    });
-    list.appendChild(wrap);
-    setTimeout(() => {
-      const fill = document.getElementById(`fill-${s.key}`);
-      if (fill) fill.style.width = (s.value / 10 * 100) + "%";
-    }, idx * 120);
-  });
-
-  const perkList = document.getElementById("perk-list");
-  perkList.innerHTML = "";
-  PERKS.forEach((p) => {
-    const div = document.createElement("div");
-    div.className = "perk";
-    div.innerHTML = `<span style="color:#2bff9c;">▸ ${p.name}</span><div class="perk-desc">${p.desc}</div>`;
-    perkList.appendChild(div);
-  });
-}
 
 function weatherCodeToText(code) {
   const map = {
@@ -443,6 +500,25 @@ function weatherCodeToText(code) {
     95: "Thunderstorm", 96: "Thunderstorm w/ hail", 99: "Severe thunderstorm"
   };
   return map[code] || "Unknown";
+}
+
+const WEATHER_ICONS = {
+  sun: `<svg viewBox="0 0 64 64" fill="none" stroke="#2bff9c" stroke-width="2.5"><circle cx="32" cy="32" r="12"/><line x1="32" y1="6" x2="32" y2="14"/><line x1="32" y1="50" x2="32" y2="58"/><line x1="6" y1="32" x2="14" y2="32"/><line x1="50" y1="32" x2="58" y2="32"/><line x1="13" y1="13" x2="19" y2="19"/><line x1="45" y1="45" x2="51" y2="51"/><line x1="13" y1="51" x2="19" y2="45"/><line x1="45" y1="19" x2="51" y2="13"/></svg>`,
+  cloud: `<svg viewBox="0 0 64 64" fill="none" stroke="#2bff9c" stroke-width="2.5"><path d="M18 42a10 10 0 0 1 0-20 13 13 0 0 1 25-4 11 11 0 0 1 3 21.5" stroke-linejoin="round"/><path d="M18 42h28a8 8 0 0 0 0-16" /></svg>`,
+  rain: `<svg viewBox="0 0 64 64" fill="none" stroke="#2bff9c" stroke-width="2.5"><path d="M16 34a9 9 0 0 1 0-18 12 12 0 0 1 23-3 10 10 0 0 1 3 19.5" stroke-linejoin="round"/><line x1="22" y1="42" x2="19" y2="52"/><line x1="32" y1="42" x2="29" y2="52"/><line x1="42" y1="42" x2="39" y2="52"/></svg>`,
+  storm: `<svg viewBox="0 0 64 64" fill="none" stroke="#2bff9c" stroke-width="2.5"><path d="M16 30a9 9 0 0 1 0-18 12 12 0 0 1 23-3 10 10 0 0 1 3 19.5" stroke-linejoin="round"/><path d="M33 38l-7 11h7l-5 9" stroke-linejoin="round" stroke-linecap="round"/></svg>`,
+  fog: `<svg viewBox="0 0 64 64" fill="none" stroke="#2bff9c" stroke-width="2.5"><line x1="10" y1="24" x2="54" y2="24"/><line x1="16" y1="32" x2="48" y2="32"/><line x1="10" y1="40" x2="54" y2="40"/></svg>`,
+  snow: `<svg viewBox="0 0 64 64" fill="none" stroke="#2bff9c" stroke-width="2.5"><circle cx="32" cy="32" r="2.5" fill="#2bff9c" stroke="none"/><line x1="32" y1="14" x2="32" y2="50"/><line x1="14" y1="32" x2="50" y2="32"/><line x1="19" y1="19" x2="45" y2="45"/><line x1="19" y1="45" x2="45" y2="19"/></svg>`
+};
+
+function weatherCodeToIcon(code) {
+  if (code === 0 || code === 1) return WEATHER_ICONS.sun;
+  if (code === 2 || code === 3) return WEATHER_ICONS.cloud;
+  if (code === 45 || code === 48) return WEATHER_ICONS.fog;
+  if ([51,53,55,61,63,65,80,81,82].includes(code)) return WEATHER_ICONS.rain;
+  if ([71,73,75].includes(code)) return WEATHER_ICONS.snow;
+  if ([95,96,99].includes(code)) return WEATHER_ICONS.storm;
+  return WEATHER_ICONS.cloud;
 }
 
 async function loadWeather() {
@@ -486,9 +562,18 @@ async function loadWeather() {
       <div class="forecast-grid">${forecastHtml}</div>
     `;
     updated.textContent = "signal acquired — last sync " + new Date().toLocaleTimeString();
+
+    const homeIcon = document.getElementById("home-weather-icon");
+    const homeTemp = document.getElementById("home-weather-temp");
+    const homeCond = document.getElementById("home-weather-cond");
+    if (homeIcon) homeIcon.innerHTML = weatherCodeToIcon(data.current.weather_code);
+    if (homeTemp) homeTemp.textContent = curTemp + "°";
+    if (homeCond) homeCond.textContent = curText.toUpperCase();
   } catch (e) {
     body.innerHTML = `<div class="muted">SIGNAL LOST. Unable to reach weather network.</div>`;
     updated.textContent = "retry in progress...";
+    const homeCond = document.getElementById("home-weather-cond");
+    if (homeCond) homeCond.textContent = "SIGNAL LOST";
     setTimeout(loadWeather, 15000);
   }
 }
@@ -498,6 +583,29 @@ function updateClock() {
   const dateStr = now.toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric", year: "numeric" });
   const timeStr = now.toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit", second: "2-digit" });
   document.getElementById("datetime").textContent = dateStr + " // " + timeStr;
+
+  const homeClock = document.getElementById("home-clock");
+  const homeDate = document.getElementById("home-date");
+  if (homeClock) {
+    homeClock.textContent = now.toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" });
+  }
+  if (homeDate) {
+    homeDate.textContent = dateStr.toUpperCase();
+  }
+}
+
+const STATUS_LINES = [
+  "SYSTEM NOMINAL",
+  "ALL SYSTEMS OPERATIONAL",
+  "VAULT-TEC APPROVED",
+  "STANDING BY",
+  "NO ALERTS"
+];
+function rotateStatusLine() {
+  const el = document.getElementById("home-status-line");
+  if (!el) return;
+  const pick = STATUS_LINES[Math.floor(Math.random() * STATUS_LINES.length)];
+  el.textContent = pick;
 }
 
 const tabs = document.querySelectorAll(".tab");
@@ -781,13 +889,66 @@ humToggle.addEventListener("click", () => {
 });
 humToggle.classList.add("on");
 
-renderStats();
+const BOOT_LINES = [
+  "ROBCO INDUSTRIES (TM) UNIFIED OPERATING SYSTEM",
+  "COPYRIGHT 2075-2077 ROBCO INDUSTRIES",
+  "-Server 4-",
+  "",
+  "INITIALIZING PIP-BOY PERSONAL...",
+  "LOADING MODULES: STAT // DATA // MAP // RADIO",
+  "CHECKING BIOMETRIC SEAL.......... OK",
+  "CALIBRATING GEIGER COUNTER....... OK",
+  "ESTABLISHING UPLINK.............. OK",
+  "",
+  "WELCOME, WANDERER."
+];
+
+function runBootSequence() {
+  const overlay = document.getElementById("boot-overlay");
+  const textEl = document.getElementById("boot-text");
+  let lineIndex = 0;
+  let charIndex = 0;
+  let rendered = "";
+
+  function finishBoot() {
+    overlay.classList.add("hidden");
+  }
+
+  overlay.addEventListener("click", finishBoot, { once: true });
+
+  function typeNext() {
+    if (lineIndex >= BOOT_LINES.length) {
+      textEl.innerHTML = rendered + '<span class="boot-cursor"></span>';
+      setTimeout(finishBoot, 700);
+      return;
+    }
+    const line = BOOT_LINES[lineIndex];
+    if (charIndex < line.length) {
+      rendered += line[charIndex];
+      charIndex++;
+      textEl.innerHTML = rendered + '<span class="boot-cursor"></span>';
+      setTimeout(typeNext, 8);
+    } else {
+      rendered += "\n";
+      lineIndex++;
+      charIndex = 0;
+      setTimeout(typeNext, 90);
+    }
+  }
+  typeNext();
+
+  setTimeout(finishBoot, 6000);
+}
+
+runBootSequence();
 loadWeather();
 initMap();
 initRadarMap();
 setInterval(loadWeather, 15 * 60 * 1000);
 updateClock();
 setInterval(updateClock, 1000);
+rotateStatusLine();
+setInterval(rotateStatusLine, 12000);
 </script>
 
 </body>
