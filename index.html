@@ -233,6 +233,17 @@
     background: #0a0e0a;
     filter: sepia(1) saturate(3) hue-rotate(65deg) brightness(1.1);
   }
+  #radar-map {
+    height: 220px;
+    border: 1px solid #1f6b46;
+    background: #0a0e0a;
+    filter: sepia(1) saturate(3) hue-rotate(65deg) brightness(1.1);
+  }
+  .radar-controls {
+    display: flex;
+    gap: 8px;
+    margin-top: 10px;
+  }
   .leaflet-popup-content-wrapper, .leaflet-popup-tip {
     background: #0a0e0a;
     color: #2bff9c;
@@ -314,6 +325,18 @@
         </div>
         <div id="weather-body">ACQUIRING SIGNAL...</div>
         <div class="footer-note" id="weather-updated"></div>
+
+        <div class="divider">
+          <div class="row" style="margin-bottom:10px;">
+            <span style="font-size:13px;">PRECIPITATION RADAR</span>
+            <span class="dim" id="radar-timestamp" style="font-size:11px;"></span>
+          </div>
+          <div id="radar-map"></div>
+          <div class="radar-controls">
+            <div class="radio-btn" id="btn-radar-playpause">❙❙ PAUSE</div>
+          </div>
+          <div class="footer-note" style="margin-top:8px;">Weather data by <a href="https://www.rainviewer.com" target="_blank" rel="noopener" style="color:#4f8a6a;">RainViewer</a></div>
+        </div>
       </div>
 
       <div class="panel" id="panel-map">
@@ -492,6 +515,9 @@ function setTab(name) {
   if (name === "map" && map) {
     setTimeout(() => map.invalidateSize(), 50);
   }
+  if (name === "data" && radarMap) {
+    setTimeout(() => radarMap.invalidateSize(), 50);
+  }
 }
 
 tabs.forEach(t => t.addEventListener("click", () => setTab(t.dataset.tab)));
@@ -599,6 +625,80 @@ function initMap() {
   });
 }
 
+let radarMap = null;
+let radarFrames = [];
+let radarLayers = [];
+let radarPosition = 0;
+let radarTimer = null;
+let radarPlaying = true;
+const RADAR_FRAME_DELAY_MS = 600;
+
+function initRadarMap() {
+  radarMap = L.map('radar-map', { zoomControl: false, attributionControl: false, dragging: true, scrollWheelZoom: false })
+    .setView([BR_LAT, BR_LON], 7);
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+    maxZoom: 18,
+    subdomains: 'abcd'
+  }).addTo(radarMap);
+  loadRadarFrames();
+}
+
+async function loadRadarFrames() {
+  try {
+    const res = await fetch('https://api.rainviewer.com/public/weather-maps.json');
+    if (!res.ok) throw new Error('radar fetch failed');
+    const data = await res.json();
+    const pastFrames = (data.radar && data.radar.past) ? data.radar.past : [];
+    if (!pastFrames.length) throw new Error('no frames');
+
+    radarFrames = pastFrames;
+    radarLayers.forEach(l => radarMap.removeLayer(l));
+    radarLayers = radarFrames.map(frame => {
+      return L.tileLayer(`https://tilecache.rainviewer.com${frame.path}/256/{z}/{x}/{y}/2/1_1.png`, {
+        opacity: 0,
+        zIndex: 5
+      }).addTo(radarMap);
+    });
+    radarPosition = radarLayers.length - 1;
+    showRadarFrame(radarPosition);
+    startRadarAnimation();
+  } catch (e) {
+    document.getElementById("radar-timestamp").textContent = "signal unavailable";
+  }
+}
+
+function showRadarFrame(idx) {
+  radarLayers.forEach((layer, i) => {
+    layer.setOpacity(i === idx ? 0.75 : 0);
+  });
+  const frame = radarFrames[idx];
+  if (frame) {
+    const d = new Date(frame.time * 1000);
+    document.getElementById("radar-timestamp").textContent = d.toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" });
+  }
+}
+
+function startRadarAnimation() {
+  if (radarTimer) clearInterval(radarTimer);
+  radarTimer = setInterval(() => {
+    if (!radarLayers.length) return;
+    radarPosition = (radarPosition + 1) % radarLayers.length;
+    showRadarFrame(radarPosition);
+  }, RADAR_FRAME_DELAY_MS);
+}
+
+document.getElementById("btn-radar-playpause").addEventListener("click", () => {
+  radarPlaying = !radarPlaying;
+  const btn = document.getElementById("btn-radar-playpause");
+  if (radarPlaying) {
+    startRadarAnimation();
+    btn.textContent = "❙❙ PAUSE";
+  } else {
+    if (radarTimer) clearInterval(radarTimer);
+    btn.textContent = "▶ PLAY";
+  }
+});
+
 let audioCtx = null;
 let humSource = null;
 let humGain = null;
@@ -684,6 +784,7 @@ humToggle.classList.add("on");
 renderStats();
 loadWeather();
 initMap();
+initRadarMap();
 setInterval(loadWeather, 15 * 60 * 1000);
 updateClock();
 setInterval(updateClock, 1000);
