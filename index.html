@@ -70,7 +70,7 @@
   .scanlines {
     position: absolute;
     inset: 0;
-    background-image: repeating-linear-gradient(0deg, rgba(43,255,156,0.05) 0px, rgba(43,255,156,0.05) 1px, transparent 1px, transparent 3px);
+    background-image: repeating-linear-gradient(0deg, rgba(255,176,0,0.05) 0px, rgba(255,176,0,0.05) 1px, transparent 1px, transparent 3px);
     pointer-events: none;
     z-index: 2;
     animation: flicker 6s infinite;
@@ -106,8 +106,8 @@
   }
   .boot-text {
     margin: 0;
-    color: #2bff9c;
-    text-shadow: 0 0 4px #2bff9c, 0 0 10px rgba(43,255,156,0.35);
+    color: #ffb000;
+    text-shadow: 0 0 4px #ffb000, 0 0 10px rgba(255,176,0,0.35);
     font-family: 'Share Tech Mono', monospace;
     font-size: 11px;
     line-height: 1.6;
@@ -118,7 +118,7 @@
     display: inline-block;
     width: 7px;
     height: 12px;
-    background: #2bff9c;
+    background: #ffb000;
     margin-left: 2px;
     animation: blink 0.8s steps(1) infinite;
     vertical-align: middle;
@@ -130,8 +130,8 @@
   .content {
     position: relative;
     z-index: 1;
-    color: #2bff9c;
-    text-shadow: 0 0 4px #2bff9c, 0 0 10px rgba(43,255,156,0.35);
+    color: #ffb000;
+    text-shadow: 0 0 4px #ffb000, 0 0 10px rgba(255,176,0,0.35);
     font-size: 13px;
     line-height: 1.5;
   }
@@ -139,7 +139,7 @@
     display: flex;
     gap: 4px;
     margin-bottom: 16px;
-    border-bottom: 1px solid #1f6b46;
+    border-bottom: 1px solid #7a4a00;
     padding-bottom: 0;
   }
   .tab {
@@ -149,26 +149,26 @@
     letter-spacing: 1.5px;
     padding: 7px 0;
     cursor: pointer;
-    color: #2bff9c;
+    color: #ffb000;
     background: transparent;
     transition: background 150ms, color 150ms;
     user-select: none;
   }
   .tab.active {
     color: #0a0e0a;
-    background: #2bff9c;
+    background: #ffb000;
   }
   .panel { display: none; }
   .panel.active { display: block; }
   .row { display: flex; justify-content: space-between; }
-  .muted { color: #6fae8a; }
-  .dim { color: #4f8a6a; }
-  .divider { border-top: 1px solid #1f6b46; margin: 14px 0; padding-top: 12px; }
+  .muted { color: #cc9248; }
+  .dim { color: #9c7233; }
+  .divider { border-top: 1px solid #7a4a00; margin: 14px 0; padding-top: 12px; }
   .statbar-wrap { margin-bottom: 14px; cursor: pointer; }
   .statbar-track {
     height: 10px;
-    border: 1px solid #1f6b46;
-    background: #05130b;
+    border: 1px solid #7a4a00;
+    background: #150d02;
     margin-top: 4px;
     position: relative;
     overflow: hidden;
@@ -176,28 +176,28 @@
   .statbar-fill {
     height: 100%;
     width: 0%;
-    background: repeating-linear-gradient(90deg, #2bff9c 0 6px, #1c9e63 6px 8px);
+    background: repeating-linear-gradient(90deg, #ffb000 0 6px, #b37400 6px 8px);
     transition: width 900ms cubic-bezier(.2,.8,.2,1);
-    box-shadow: 0 0 6px #2bff9c;
+    box-shadow: 0 0 6px #ffb000;
   }
   .statblurb {
     font-size: 12px;
-    color: #7be8b5;
-    border-left: 2px solid #1c9e63;
+    color: #ffcc66;
+    border-left: 2px solid #b37400;
     padding-left: 8px;
     margin-top: 6px;
     display: none;
   }
   .statblurb.show { display: block; }
   .perk { font-size: 12px; margin-bottom: 8px; }
-  .perk-desc { color: #6fae8a; margin-left: 14px; }
+  .perk-desc { color: #cc9248; margin-left: 14px; }
   .forecast-grid {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
     gap: 8px;
   }
   .forecast-cell {
-    border: 1px solid #1f6b46;
+    border: 1px solid #7a4a00;
     padding: 8px 4px;
     text-align: center;
   }
@@ -213,7 +213,7 @@
     text-align: center;
     font-size: 13px;
     letter-spacing: 2px;
-    color: #6fae8a;
+    color: #cc9248;
     margin-bottom: 4px;
   }
   .home-weather-row {
@@ -248,20 +248,20 @@
     display: flex;
     justify-content: space-between;
     padding: 9px 10px;
-    border: 1px solid #1f6b46;
+    border: 1px solid #7a4a00;
     cursor: pointer;
     font-size: 12px;
     margin-bottom: 8px;
     transition: background 150ms, border-color 150ms;
   }
   .station.tuned {
-    border-color: #2bff9c;
-    background: rgba(43,255,156,0.08);
+    border-color: #ffb000;
+    background: rgba(255,176,0,0.08);
   }
-  .station .status { color: #4f8a6a; }
-  .station.tuned .status { color: #2bff9c; }
+  .station .status { color: #9c7233; }
+  .station.tuned .status { color: #ffb000; }
   .transmission {
-    border: 1px solid #1f6b46;
+    border: 1px solid #7a4a00;
     padding: 12px;
     min-height: 50px;
     font-size: 12px;
@@ -274,16 +274,49 @@
   .radio-btn {
     flex: 1;
     text-align: center;
-    border: 1px solid #1f6b46;
+    border: 1px solid #7a4a00;
     padding: 8px 0;
     font-size: 12px;
     cursor: pointer;
     background: transparent;
-    color: #2bff9c;
+    color: #ffb000;
     font-family: inherit;
   }
-  .radio-btn:active { background: rgba(43,255,156,0.12); }
-  .footer-note { margin-top: 16px; font-size: 11px; color: #4f8a6a; }
+  .radio-btn:active { background: rgba(255,176,0,0.12); }
+  .volume-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 12px;
+  }
+  .volume-row input[type="range"] {
+    flex: 1;
+    -webkit-appearance: none;
+    appearance: none;
+    height: 4px;
+    background: #7a4a00;
+    outline: none;
+    cursor: pointer;
+  }
+  .volume-row input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: #ffb000;
+    box-shadow: 0 0 6px #ffb000;
+    cursor: pointer;
+  }
+  .volume-row input[type="range"]::-moz-range-thumb {
+    width: 14px;
+    height: 14px;
+    border: none;
+    border-radius: 50%;
+    background: #ffb000;
+    box-shadow: 0 0 6px #ffb000;
+    cursor: pointer;
+  }
+  .footer-note { margin-top: 16px; font-size: 11px; color: #9c7233; }
   .bottombar {
     display: flex;
     align-items: center;
@@ -303,8 +336,8 @@
     transition: background 200ms, box-shadow 200ms;
   }
   .dot.active {
-    background: #2bff9c;
-    box-shadow: 0 0 6px #2bff9c;
+    background: #ffb000;
+    box-shadow: 0 0 6px #ffb000;
   }
   .knob {
     width: 46px;
@@ -328,15 +361,15 @@
   #yt-player { display: none; }
   #leaflet-map {
     height: 280px;
-    border: 1px solid #1f6b46;
-    background: #0a0e0a;
-    filter: sepia(1) saturate(3) hue-rotate(65deg) brightness(1.1);
+    border: 1px solid #7a4a00;
+    background: #150d02;
+    filter: sepia(1) saturate(3) hue-rotate(5deg) brightness(1.1);
   }
   #radar-map {
     height: 220px;
-    border: 1px solid #1f6b46;
-    background: #0a0e0a;
-    filter: sepia(1) saturate(3) hue-rotate(65deg) brightness(1.1);
+    border: 1px solid #7a4a00;
+    background: #150d02;
+    filter: sepia(1) saturate(3) hue-rotate(5deg) brightness(1.1);
   }
   .radar-controls {
     display: flex;
@@ -345,8 +378,8 @@
   }
   .leaflet-popup-content-wrapper, .leaflet-popup-tip {
     background: #0a0e0a;
-    color: #2bff9c;
-    border: 1px solid #2bff9c;
+    color: #ffb000;
+    border: 1px solid #ffb000;
     border-radius: 0;
     box-shadow: none;
   }
@@ -357,8 +390,8 @@
   }
   .leaflet-control-zoom a {
     background: #0a0e0a;
-    color: #2bff9c;
-    border: 1px solid #1f6b46;
+    color: #ffb000;
+    border: 1px solid #7a4a00;
   }
   .leaflet-div-icon {
     background: transparent !important;
@@ -368,21 +401,10 @@
     width: 12px;
     height: 12px;
     border-radius: 50%;
-    background: #2bff9c !important;
-    box-shadow: 0 0 8px #2bff9c, 0 0 2px #2bff9c;
+    background: #ffb000 !important;
+    box-shadow: 0 0 8px #ffb000, 0 0 2px #ffb000;
     border: 1px solid #0a0e0a;
   }
-  .hum-toggle {
-    font-size: 10px;
-    letter-spacing: 1px;
-    color: #4f8a6a;
-    border: 1px solid #1f6b46;
-    padding: 6px 8px;
-    cursor: pointer;
-    user-select: none;
-    white-space: nowrap;
-  }
-  .hum-toggle.on { color: #2bff9c; border-color: #2bff9c; }
 </style>
 </head>
 <body>
@@ -426,7 +448,7 @@
       </div>
 
       <div class="panel" id="panel-data">
-        <div style="border-bottom:1px solid #1f6b46; padding-bottom:8px; margin-bottom:16px;">
+        <div style="border-bottom:1px solid #7a4a00; padding-bottom:8px; margin-bottom:16px;">
           <div>SURFACE CONDITIONS</div>
           <div class="dim" id="datetime" style="font-size:11px; margin-top:2px;"></div>
         </div>
@@ -442,26 +464,35 @@
           <div class="radar-controls">
             <div class="radio-btn" id="btn-radar-playpause">❙❙ PAUSE</div>
           </div>
-          <div class="footer-note" style="margin-top:8px;">Weather data by <a href="https://www.rainviewer.com" target="_blank" rel="noopener" style="color:#4f8a6a;">RainViewer</a></div>
+          <div class="footer-note" style="margin-top:8px;">Weather data by <a href="https://www.rainviewer.com" target="_blank" rel="noopener" style="color:#9c7233;">RainViewer</a></div>
         </div>
       </div>
 
       <div class="panel" id="panel-map">
-        <div style="border-bottom:1px solid #1f6b46; padding-bottom:8px; margin-bottom:14px;">WORLD MAP</div>
+        <div style="border-bottom:1px solid #7a4a00; padding-bottom:8px; margin-bottom:14px;">WORLD MAP</div>
         <div id="leaflet-map"></div>
         <div class="footer-note">tap a marker for coordinates</div>
       </div>
 
       <div class="panel" id="panel-radio">
-        <div style="border-bottom:1px solid #1f6b46; padding-bottom:8px; margin-bottom:16px;">RADIO</div>
-        <div class="station tuned" id="station-rnv" data-freq="104.3">
+        <div style="border-bottom:1px solid #7a4a00; padding-bottom:8px; margin-bottom:16px;">RADIO</div>
+        <div class="station" id="station-rnv" data-video="kXfQ7AB-hEM">
           <span>104.3 MHz — RADIO NEW VEGAS</span>
-          <span class="status">● STANDBY</span>
+          <span class="status">STANDBY</span>
         </div>
-        <div class="transmission" id="transmission-text">tap the frequency to tune in...</div>
+        <div class="station" id="station-talk" data-video="gzF7aHxk4Y4">
+          <span>98.7 MHz — TALK NEW VEGAS</span>
+          <span class="status">STANDBY</span>
+        </div>
+        <div class="transmission" id="transmission-text">tap a frequency to tune in...</div>
         <div class="radio-controls">
           <div class="radio-btn" id="btn-playpause">▶ PLAY</div>
           <div class="radio-btn" id="btn-mute">MUTE</div>
+        </div>
+        <div class="volume-row">
+          <span class="dim" style="font-size:11px;">VOL</span>
+          <input type="range" id="volume-slider" min="0" max="100" value="70" />
+          <span class="dim" id="volume-value" style="font-size:11px;">70</span>
         </div>
         <div id="yt-player"></div>
         <div class="footer-note">audio requires a tap to start on mobile browsers</div>
@@ -480,7 +511,6 @@
     <div class="knob" id="knob">
       <div class="knob-indicator" id="knob-indicator"></div>
     </div>
-    <div class="hum-toggle" id="hum-toggle" title="ambient hum">HUM: ON</div>
   </div>
 </div>
 
@@ -489,7 +519,6 @@
 <script>
 const BR_LAT = 30.4515;
 const BR_LON = -91.1871;
-const YT_VIDEO_ID = "kXfQ7AB-hEM";
 
 function weatherCodeToText(code) {
   const map = {
@@ -505,12 +534,12 @@ function weatherCodeToText(code) {
 }
 
 const WEATHER_ICONS = {
-  sun: `<svg viewBox="0 0 64 64" fill="none" stroke="#2bff9c" stroke-width="2.5"><circle cx="32" cy="32" r="12"/><line x1="32" y1="6" x2="32" y2="14"/><line x1="32" y1="50" x2="32" y2="58"/><line x1="6" y1="32" x2="14" y2="32"/><line x1="50" y1="32" x2="58" y2="32"/><line x1="13" y1="13" x2="19" y2="19"/><line x1="45" y1="45" x2="51" y2="51"/><line x1="13" y1="51" x2="19" y2="45"/><line x1="45" y1="19" x2="51" y2="13"/></svg>`,
-  cloud: `<svg viewBox="0 0 64 64" fill="none" stroke="#2bff9c" stroke-width="2.5"><path d="M18 42a10 10 0 0 1 0-20 13 13 0 0 1 25-4 11 11 0 0 1 3 21.5" stroke-linejoin="round"/><path d="M18 42h28a8 8 0 0 0 0-16" /></svg>`,
-  rain: `<svg viewBox="0 0 64 64" fill="none" stroke="#2bff9c" stroke-width="2.5"><path d="M16 34a9 9 0 0 1 0-18 12 12 0 0 1 23-3 10 10 0 0 1 3 19.5" stroke-linejoin="round"/><line x1="22" y1="42" x2="19" y2="52"/><line x1="32" y1="42" x2="29" y2="52"/><line x1="42" y1="42" x2="39" y2="52"/></svg>`,
-  storm: `<svg viewBox="0 0 64 64" fill="none" stroke="#2bff9c" stroke-width="2.5"><path d="M16 30a9 9 0 0 1 0-18 12 12 0 0 1 23-3 10 10 0 0 1 3 19.5" stroke-linejoin="round"/><path d="M33 38l-7 11h7l-5 9" stroke-linejoin="round" stroke-linecap="round"/></svg>`,
-  fog: `<svg viewBox="0 0 64 64" fill="none" stroke="#2bff9c" stroke-width="2.5"><line x1="10" y1="24" x2="54" y2="24"/><line x1="16" y1="32" x2="48" y2="32"/><line x1="10" y1="40" x2="54" y2="40"/></svg>`,
-  snow: `<svg viewBox="0 0 64 64" fill="none" stroke="#2bff9c" stroke-width="2.5"><circle cx="32" cy="32" r="2.5" fill="#2bff9c" stroke="none"/><line x1="32" y1="14" x2="32" y2="50"/><line x1="14" y1="32" x2="50" y2="32"/><line x1="19" y1="19" x2="45" y2="45"/><line x1="19" y1="45" x2="45" y2="19"/></svg>`
+  sun: `<svg viewBox="0 0 64 64" fill="none" stroke="#ffb000" stroke-width="2.5"><circle cx="32" cy="32" r="12"/><line x1="32" y1="6" x2="32" y2="14"/><line x1="32" y1="50" x2="32" y2="58"/><line x1="6" y1="32" x2="14" y2="32"/><line x1="50" y1="32" x2="58" y2="32"/><line x1="13" y1="13" x2="19" y2="19"/><line x1="45" y1="45" x2="51" y2="51"/><line x1="13" y1="51" x2="19" y2="45"/><line x1="45" y1="19" x2="51" y2="13"/></svg>`,
+  cloud: `<svg viewBox="0 0 64 64" fill="none" stroke="#ffb000" stroke-width="2.5"><path d="M18 42a10 10 0 0 1 0-20 13 13 0 0 1 25-4 11 11 0 0 1 3 21.5" stroke-linejoin="round"/><path d="M18 42h28a8 8 0 0 0 0-16" /></svg>`,
+  rain: `<svg viewBox="0 0 64 64" fill="none" stroke="#ffb000" stroke-width="2.5"><path d="M16 34a9 9 0 0 1 0-18 12 12 0 0 1 23-3 10 10 0 0 1 3 19.5" stroke-linejoin="round"/><line x1="22" y1="42" x2="19" y2="52"/><line x1="32" y1="42" x2="29" y2="52"/><line x1="42" y1="42" x2="39" y2="52"/></svg>`,
+  storm: `<svg viewBox="0 0 64 64" fill="none" stroke="#ffb000" stroke-width="2.5"><path d="M16 30a9 9 0 0 1 0-18 12 12 0 0 1 23-3 10 10 0 0 1 3 19.5" stroke-linejoin="round"/><path d="M33 38l-7 11h7l-5 9" stroke-linejoin="round" stroke-linecap="round"/></svg>`,
+  fog: `<svg viewBox="0 0 64 64" fill="none" stroke="#ffb000" stroke-width="2.5"><line x1="10" y1="24" x2="54" y2="24"/><line x1="16" y1="32" x2="48" y2="32"/><line x1="10" y1="40" x2="54" y2="40"/></svg>`,
+  snow: `<svg viewBox="0 0 64 64" fill="none" stroke="#ffb000" stroke-width="2.5"><circle cx="32" cy="32" r="2.5" fill="#ffb000" stroke="none"/><line x1="32" y1="14" x2="32" y2="50"/><line x1="14" y1="32" x2="50" y2="32"/><line x1="19" y1="19" x2="45" y2="45"/><line x1="19" y1="45" x2="45" y2="19"/></svg>`
 };
 
 function weatherCodeToIcon(code) {
@@ -560,7 +589,7 @@ async function loadWeather() {
       <div class="muted" style="font-size:13px; margin-bottom:20px;">
         Baton Rouge, LA — high ${todayHigh}° — precip chance ${todayPrecip}%
       </div>
-      <div style="font-size:14px; margin-bottom:10px; border-top:1px solid #1f6b46; padding-top:12px;">4-DAY OUTLOOK</div>
+      <div style="font-size:14px; margin-bottom:10px; border-top:1px solid #7a4a00; padding-top:12px;">4-DAY OUTLOOK</div>
       <div class="forecast-grid">${forecastHtml}</div>
     `;
     updated.textContent = "signal acquired — last sync " + new Date().toLocaleTimeString();
@@ -617,6 +646,7 @@ const tabOrder = ["stat", "data", "map", "radio"];
 const knobIndicator = document.getElementById("knob-indicator");
 
 function setTab(name) {
+  playTabSwitchSound();
   tabs.forEach(t => t.classList.toggle("active", t.dataset.tab === name));
   dots.forEach(d => d.classList.toggle("active", d.dataset.tab === name));
   panels.forEach(p => p.classList.toggle("active", p.id === "panel-" + name));
@@ -642,58 +672,132 @@ let ytPlayer = null;
 let ytReady = false;
 let isPlaying = false;
 let isMuted = false;
+let currentStationId = null;
+let isTuning = false;
+let currentVolume = 70;
+
+const STATIONS = [
+  { id: "station-rnv", video: "kXfQ7AB-hEM", label: "RADIO NEW VEGAS", freq: "104.3" },
+  { id: "station-talk", video: "gzF7aHxk4Y4", label: "TALK NEW VEGAS", freq: "98.7" }
+];
 
 function onYouTubeIframeAPIReady() {
   ytPlayer = new YT.Player('yt-player', {
     height: '1',
     width: '1',
-    videoId: YT_VIDEO_ID,
+    videoId: STATIONS[0].video,
     playerVars: { autoplay: 0, controls: 0 },
     events: {
-      'onReady': () => { ytReady = true; },
+      'onReady': () => {
+        ytReady = true;
+        ytPlayer.setVolume(currentVolume);
+      },
       'onStateChange': onPlayerStateChange
     }
   });
 }
 window.onYouTubeIframeAPIReady = onYouTubeIframeAPIReady;
 
+function setAllStationStatus(text, tunedId) {
+  STATIONS.forEach(s => {
+    const el = document.getElementById(s.id);
+    const statusEl = el.querySelector(".status");
+    if (s.id === tunedId) {
+      el.classList.add("tuned");
+      statusEl.textContent = text;
+    } else {
+      el.classList.remove("tuned");
+      statusEl.textContent = "STANDBY";
+    }
+  });
+}
+
 function onPlayerStateChange(event) {
-  const station = document.getElementById("station-rnv");
-  const statusEl = station.querySelector(".status");
+  if (isTuning) return;
   const transmission = document.getElementById("transmission-text");
   const playBtn = document.getElementById("btn-playpause");
 
   if (event.data === YT.PlayerState.PLAYING) {
     isPlaying = true;
-    station.classList.add("tuned");
-    statusEl.textContent = "● TUNED";
-    transmission.textContent = "...signal locked. transmission clear. holding frequency 104.3...";
+    setAllStationStatus("● TUNED", currentStationId);
+    const station = STATIONS.find(s => s.id === currentStationId);
+    if (station) {
+      transmission.textContent = `...signal locked. transmission clear. holding frequency ${station.freq}...`;
+    }
     playBtn.textContent = "❙❙ PAUSE";
   } else if (event.data === YT.PlayerState.PAUSED) {
     isPlaying = false;
-    statusEl.textContent = "● HOLDING";
+    setAllStationStatus("● HOLDING", currentStationId);
     playBtn.textContent = "▶ PLAY";
   } else if (event.data === YT.PlayerState.BUFFERING) {
     transmission.textContent = "...retuning...";
   }
 }
 
-document.getElementById("station-rnv").addEventListener("click", () => {
+function playTuningStatic(durationMs) {
+  ensureAudioCtx();
+  const seconds = durationMs / 1000;
+  const bufferSize = Math.floor(audioCtx.sampleRate * seconds);
+  const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+  const data = buffer.getChannelData(0);
+  for (let i = 0; i < bufferSize; i++) {
+    const fadeOut = i > bufferSize * 0.8 ? (bufferSize - i) / (bufferSize * 0.2) : 1;
+    data[i] = (Math.random() * 2 - 1) * fadeOut;
+  }
+  const noise = audioCtx.createBufferSource();
+  noise.buffer = buffer;
+  const filter = audioCtx.createBiquadFilter();
+  filter.type = "bandpass";
+  filter.frequency.value = 1800;
+  const gain = audioCtx.createGain();
+  gain.gain.value = 0.18;
+  noise.connect(filter);
+  filter.connect(gain);
+  gain.connect(audioCtx.destination);
+  noise.start();
+}
+
+function tuneToStation(stationId) {
   if (!ytReady) {
     document.getElementById("transmission-text").textContent = "...acquiring signal...";
     return;
   }
-  playStaticBurst();
+  if (isTuning) return;
+  const station = STATIONS.find(s => s.id === stationId);
+  if (!station) return;
+
+  isTuning = true;
+  const transmission = document.getElementById("transmission-text");
+  const playBtn = document.getElementById("btn-playpause");
+  setAllStationStatus("● TUNING...", stationId);
+  transmission.textContent = "...searching frequency...";
+  playBtn.textContent = "❙❙ PAUSE";
+
   if (isPlaying) {
     ytPlayer.pauseVideo();
-  } else {
-    ytPlayer.playVideo();
   }
+  playTuningStatic(1800);
+
+  setTimeout(() => {
+    currentStationId = stationId;
+    ytPlayer.loadVideoById(station.video);
+    ytPlayer.setVolume(currentVolume);
+    isTuning = false;
+    isPlaying = true;
+  }, 1800);
+}
+
+STATIONS.forEach(s => {
+  document.getElementById(s.id).addEventListener("click", () => tuneToStation(s.id));
 });
 
 document.getElementById("btn-playpause").addEventListener("click", (e) => {
   e.stopPropagation();
-  if (!ytReady) return;
+  if (!ytReady || isTuning) return;
+  if (!currentStationId) {
+    tuneToStation(STATIONS[0].id);
+    return;
+  }
   if (isPlaying) {
     ytPlayer.pauseVideo();
   } else {
@@ -712,6 +816,16 @@ document.getElementById("btn-mute").addEventListener("click", (e) => {
     document.getElementById("btn-mute").textContent = "UNMUTE";
   }
   isMuted = !isMuted;
+});
+
+const volumeSlider = document.getElementById("volume-slider");
+const volumeValue = document.getElementById("volume-value");
+volumeSlider.addEventListener("input", (e) => {
+  currentVolume = parseInt(e.target.value, 10);
+  volumeValue.textContent = currentVolume;
+  if (ytReady) {
+    ytPlayer.setVolume(currentVolume);
+  }
 });
 
 let map = null;
@@ -745,7 +859,7 @@ const RADAR_FRAME_DELAY_MS = 600;
 
 function initRadarMap() {
   radarMap = L.map('radar-map', { zoomControl: false, attributionControl: false, dragging: true, scrollWheelZoom: false })
-    .setView([BR_LAT, BR_LON], 7);
+    .setView([BR_LAT, BR_LON], 7.5);
   L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
     maxZoom: 18,
     subdomains: 'abcd'
@@ -810,10 +924,6 @@ document.getElementById("btn-radar-playpause").addEventListener("click", () => {
 });
 
 let audioCtx = null;
-let humSource = null;
-let humGain = null;
-let humOn = true;
-let humStarted = false;
 
 function ensureAudioCtx() {
   if (!audioCtx) {
@@ -824,72 +934,28 @@ function ensureAudioCtx() {
   }
 }
 
-function startHum() {
+function playTabSwitchSound() {
   ensureAudioCtx();
-  if (humStarted) return;
-
-  const bufferSeconds = 2;
-  const bufferSize = audioCtx.sampleRate * bufferSeconds;
+  const duration = 0.12;
+  const bufferSize = Math.floor(audioCtx.sampleRate * duration);
   const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
   const data = buffer.getChannelData(0);
   for (let i = 0; i < bufferSize; i++) {
-    data[i] = Math.random() * 2 - 1;
-  }
-
-  humSource = audioCtx.createBufferSource();
-  humSource.buffer = buffer;
-  humSource.loop = true;
-
-  const filter = audioCtx.createBiquadFilter();
-  filter.type = "bandpass";
-  filter.frequency.value = 2200;
-  filter.Q.value = 0.7;
-
-  humGain = audioCtx.createGain();
-  humGain.gain.value = humOn ? 0.006 : 0;
-
-  humSource.connect(filter);
-  filter.connect(humGain);
-  humGain.connect(audioCtx.destination);
-  humSource.start();
-  humStarted = true;
-}
-
-function playStaticBurst() {
-  ensureAudioCtx();
-  const bufferSize = audioCtx.sampleRate * 0.4;
-  const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
-  const data = buffer.getChannelData(0);
-  for (let i = 0; i < bufferSize; i++) {
-    data[i] = (Math.random() * 2 - 1) * (1 - i / bufferSize);
+    const fadeOut = (bufferSize - i) / bufferSize;
+    data[i] = (Math.random() * 2 - 1) * fadeOut;
   }
   const noise = audioCtx.createBufferSource();
   noise.buffer = buffer;
   const filter = audioCtx.createBiquadFilter();
-  filter.type = "bandpass";
-  filter.frequency.value = 1800;
+  filter.type = "highpass";
+  filter.frequency.value = 1200;
   const gain = audioCtx.createGain();
-  gain.gain.value = 0.18;
+  gain.gain.value = 0.22;
   noise.connect(filter);
   filter.connect(gain);
   gain.connect(audioCtx.destination);
   noise.start();
 }
-
-document.body.addEventListener("click", () => {
-  startHum();
-}, { once: true });
-
-const humToggle = document.getElementById("hum-toggle");
-humToggle.addEventListener("click", () => {
-  humOn = !humOn;
-  if (humGain) {
-    humGain.gain.value = humOn ? 0.012 : 0;
-  }
-  humToggle.textContent = humOn ? "HUM: ON" : "HUM: OFF";
-  humToggle.classList.toggle("on", humOn);
-});
-humToggle.classList.add("on");
 
 const BOOT_LINES = [
   "ROBCO INDUSTRIES (TM) UNIFIED OPERATING SYSTEM",
