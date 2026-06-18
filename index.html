@@ -162,6 +162,11 @@
     text-shadow: 0 0 4px #ffb000, 0 0 10px rgba(255,176,0,0.35);
     font-size: 13px;
     line-height: 1.5;
+    opacity: 0;
+    transition: opacity 400ms ease-in;
+  }
+  .content.visible {
+    opacity: 1;
   }
   .tabs {
     display: flex;
@@ -648,6 +653,7 @@ function weatherCodeToIcon(code) {
 }
 
 let currentPrecipChance = 0;
+let currentWeatherCode = 0;
 
 async function loadWeather() {
   const body = document.getElementById("weather-body");
@@ -663,6 +669,7 @@ async function loadWeather() {
     const todayHigh = Math.round(data.daily.temperature_2m_max[0]);
     const todayPrecip = data.daily.precipitation_probability_max[0];
     currentPrecipChance = todayPrecip;
+    currentWeatherCode = data.current.weather_code;
     updateRadAlert(todayPrecip);
 
     let forecastHtml = "";
@@ -1088,17 +1095,32 @@ function playGeigerTick() {
   noise.start();
 }
 
+function getWeatherRadMultiplier() {
+  const code = currentWeatherCode;
+  if ([95, 96, 99].includes(code)) return 1.0;        // thunderstorm — max
+  if ([65, 75, 82].includes(code)) return 0.85;       // heavy rain/snow/showers
+  if ([61, 63, 71, 73, 80, 81].includes(code)) return 0.65; // moderate rain/snow
+  if ([51, 53, 55].includes(code)) return 0.45;       // drizzle
+  if ([45, 48].includes(code)) return 0.35;           // fog
+  if (code === 3) return 0.25;                        // overcast
+  if (code === 2) return 0.15;                        // partly cloudy
+  if (code === 0 || code === 1) return 0.05;          // clear/mainly clear
+  return 0.2;                                         // unknown fallback
+}
+
 function scheduleNextGeigerTick() {
   if (!geigerOn) return;
-  // base interval 900ms, scales down toward 150ms as precip chance rises toward 100%
   const precipFactor = Math.min(currentPrecipChance, 100) / 100;
-  const baseInterval = 900 - precipFactor * 700;
+  const weatherFactor = getWeatherRadMultiplier();
+  // Blend precip chance (40%) and weather code (60%) for tick rate
+  const combinedFactor = (precipFactor * 0.4) + (weatherFactor * 0.6);
+  const baseInterval = 900 - combinedFactor * 750;
   const jitter = baseInterval * 0.5;
   const interval = baseInterval + (Math.random() * jitter - jitter / 2);
   geigerTimer = setTimeout(() => {
     playGeigerTick();
     scheduleNextGeigerTick();
-  }, Math.max(interval, 100));
+  }, Math.max(interval, 80));
 }
 
 function setGeigerReadout() {
@@ -1108,9 +1130,12 @@ function setGeigerReadout() {
     readout.textContent = "standing by...";
     return;
   }
-  if (currentPrecipChance >= 60) {
+  const code = currentWeatherCode;
+  if ([95, 96, 99].includes(code)) {
+    readout.textContent = "severe rad storm detected";
+  } else if ([65, 75, 80, 81, 82].includes(code) || currentPrecipChance >= 60) {
     readout.textContent = "elevated activity detected";
-  } else if (currentPrecipChance >= 30) {
+  } else if ([51, 53, 55, 61, 63, 71, 73].includes(code) || currentPrecipChance >= 30) {
     readout.textContent = "mild background radiation";
   } else {
     readout.textContent = "background levels normal";
@@ -1156,19 +1181,28 @@ function updateRadAlert(precipChance) {
   setGeigerReadout();
 }
 
-const BOOT_LINES = [
-  "ROBCO INDUSTRIES (TM) UNIFIED OPERATING SYSTEM",
-  "COPYRIGHT 2075-2077 ROBCO INDUSTRIES",
-  "-Server 4-",
-  "",
-  "INITIALIZING PIP-BOY PERSONAL...",
-  "LOADING MODULES: STAT // DATA // MAP // RADIO",
-  "CHECKING BIOMETRIC SEAL.......... OK",
-  "CALIBRATING GEIGER COUNTER....... OK",
-  "ESTABLISHING UPLINK.............. OK",
-  "",
-  "WELCOME, WANDERER."
-];
+function getBootLines() {
+  const now = new Date();
+  const dateStr = now.toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric", year: "numeric" }).toUpperCase();
+  const timeStr = now.toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit", second: "2-digit" });
+  return [
+    "ROBCO INDUSTRIES (TM) UNIFIED OPERATING SYSTEM",
+    "COPYRIGHT 2075-2077 ROBCO INDUSTRIES",
+    "-Server 4-",
+    "",
+    `SYSTEM DATE: ${dateStr}`,
+    `SYSTEM TIME: ${timeStr}`,
+    `LOCATION: BATON ROUGE, LA`,
+    "",
+    "INITIALIZING PIP-BOY PERSONAL...",
+    "LOADING MODULES: STAT // DATA // MAP // RADIO // LOG",
+    "CHECKING BIOMETRIC SEAL.......... OK",
+    "CALIBRATING GEIGER COUNTER....... OK",
+    "ESTABLISHING UPLINK.............. OK",
+    "",
+    "WELCOME, WANDERER."
+  ];
+}
 
 function playBootPowerOn() {
   try {
@@ -1241,6 +1275,7 @@ function playBootLineCrackle() {
 function runBootSequence() {
   const overlay = document.getElementById("boot-overlay");
   const textEl = document.getElementById("boot-text");
+  const BOOT_LINES = getBootLines();
   let lineIndex = 0;
   let charIndex = 0;
   let rendered = "";
@@ -1252,6 +1287,7 @@ function runBootSequence() {
     if (!bootActive) return;
     bootActive = false;
     overlay.classList.add("hidden");
+    document.querySelector(".content").classList.add("visible");
   }
 
   overlay.addEventListener("click", finishBoot, { once: true });
