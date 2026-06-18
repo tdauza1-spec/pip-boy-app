@@ -348,39 +348,6 @@
     font-family: inherit;
   }
   .radio-btn:active { background: rgba(255,176,0,0.12); }
-  .volume-row {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    margin-top: 12px;
-  }
-  .volume-row input[type="range"] {
-    flex: 1;
-    -webkit-appearance: none;
-    appearance: none;
-    height: 4px;
-    background: #7a4a00;
-    outline: none;
-    cursor: pointer;
-  }
-  .volume-row input[type="range"]::-webkit-slider-thumb {
-    -webkit-appearance: none;
-    width: 14px;
-    height: 14px;
-    border-radius: 50%;
-    background: #ffb000;
-    box-shadow: 0 0 6px #ffb000;
-    cursor: pointer;
-  }
-  .volume-row input[type="range"]::-moz-range-thumb {
-    width: 14px;
-    height: 14px;
-    border: none;
-    border-radius: 50%;
-    background: #ffb000;
-    box-shadow: 0 0 6px #ffb000;
-    cursor: pointer;
-  }
   .footer-note { margin-top: 16px; font-size: 11px; color: #9c7233; }
   .journal-input {
     width: 100%;
@@ -607,11 +574,6 @@
         <div class="radio-controls">
           <div class="radio-btn" id="btn-playpause">▶ PLAY</div>
           <div class="radio-btn" id="btn-mute">MUTE</div>
-        </div>
-        <div class="volume-row">
-          <span class="dim" style="font-size:11px;">VOL</span>
-          <input type="range" id="volume-slider" min="0" max="100" value="70" />
-          <span class="dim" id="volume-value" style="font-size:11px;">70</span>
         </div>
         <div id="yt-player"></div>
         <div class="footer-note">tap a station to tune, then press PLAY to start audio</div>
@@ -981,20 +943,6 @@ document.getElementById("btn-mute").addEventListener("click", (e) => {
   isMuted = !isMuted;
 });
 
-const volumeSlider = document.getElementById("volume-slider");
-const volumeValue = document.getElementById("volume-value");
-volumeSlider.addEventListener("input", (e) => {
-  currentVolume = parseInt(e.target.value, 10);
-  volumeValue.textContent = currentVolume;
-  if (isMuted) {
-    isMuted = false;
-    document.getElementById("btn-mute").textContent = "MUTE";
-  }
-  if (ytReady) {
-    ytPlayer.setVolume(currentVolume);
-  }
-});
-
 let map = null;
 function initMap() {
   map = L.map('leaflet-map', { zoomControl: true, attributionControl: false }).setView([34.5, -98], 4);
@@ -1178,8 +1126,10 @@ document.getElementById("geiger-toggle").addEventListener("click", () => {
   setGeigerReadout();
   if (geigerOn) {
     scheduleNextGeigerTick();
+    updateRadAlert(currentPrecipChance);
   } else if (geigerTimer) {
     clearTimeout(geigerTimer);
+    radAlertActive = false;
   }
 });
 
@@ -1194,7 +1144,7 @@ function showRadAlertBanner() {
 }
 
 function updateRadAlert(precipChance) {
-  if (precipChance >= 60) {
+  if (precipChance >= 60 && geigerOn) {
     const justCrossed = !radAlertActive;
     radAlertActive = true;
     if (justCrossed) {
