@@ -859,7 +859,7 @@ const RADAR_FRAME_DELAY_MS = 600;
 
 function initRadarMap() {
   radarMap = L.map('radar-map', { zoomControl: false, attributionControl: false, dragging: true, scrollWheelZoom: false })
-    .setView([BR_LAT, BR_LON], 7.5);
+    .setView([BR_LAT, BR_LON], 7);
   L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
     maxZoom: 18,
     subdomains: 'abcd'
