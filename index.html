@@ -559,7 +559,7 @@
       <div class="panel" id="panel-map">
         <div style="border-bottom:1px solid #7a4a00; padding-bottom:8px; margin-bottom:14px;">WORLD MAP</div>
         <div id="leaflet-map"></div>
-        <div class="footer-note">tap a marker for coordinates</div>
+        <div class="footer-note">drag to pan, pinch or scroll to zoom</div>
       </div>
 
       <div class="panel" id="panel-radio">
@@ -952,23 +952,11 @@ volumeSlider.addEventListener("input", (e) => {
 
 let map = null;
 function initMap() {
-  const LOCATIONS = [
-    { name: "HOME — Baton Rouge, LA", lat: 30.4515, lon: -91.1871 },
-    { name: "Colorado Springs, CO", lat: 38.8339, lon: -104.8214 },
-    { name: "Pikes Peak Summit", lat: 38.8409, lon: -105.0423 }
-  ];
   map = L.map('leaflet-map', { zoomControl: true, attributionControl: false }).setView([34.5, -98], 4);
   L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
     maxZoom: 18,
     subdomains: 'abcd'
   }).addTo(map);
-
-  LOCATIONS.forEach(loc => {
-    const icon = L.divIcon({ className: 'blip-marker', iconSize: [12, 12] });
-    L.marker([loc.lat, loc.lon], { icon })
-      .addTo(map)
-      .bindPopup(`${loc.name}<br>${loc.lat.toFixed(4)}, ${loc.lon.toFixed(4)}`);
-  });
 }
 
 let radarMap = null;
@@ -1252,16 +1240,20 @@ function runBootSequence() {
   let lineIndex = 0;
   let charIndex = 0;
   let rendered = "";
+  let bootActive = true;
 
   playBootPowerOn();
 
   function finishBoot() {
+    if (!bootActive) return;
+    bootActive = false;
     overlay.classList.add("hidden");
   }
 
   overlay.addEventListener("click", finishBoot, { once: true });
 
   function typeNext() {
+    if (!bootActive) return;
     if (lineIndex >= BOOT_LINES.length) {
       textEl.innerHTML = rendered + '<span class="boot-cursor"></span>';
       setTimeout(finishBoot, 700);
