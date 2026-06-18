@@ -811,6 +811,9 @@ function setTab(name) {
   if (name === "data" && radarMap) {
     setTimeout(() => radarMap.invalidateSize(), 50);
   }
+  if (name === "stat" && radAlertActive) {
+    showRadAlertBanner();
+  }
 }
 
 tabs.forEach(t => t.addEventListener("click", () => setTab(t.dataset.tab)));
@@ -931,17 +934,17 @@ function tuneToStation(stationId) {
   // Load and start the new station immediately, synchronously within this click
   // gesture — mobile browsers generally won't honor autoplay calls made from
   // inside a later setTimeout callback, only from the original gesture itself.
-  // We mute it during the static window so it's inaudible until "tuned in."
-  ytPlayer.mute();
+  // We silence it via volume (not mute()) during the static window, since
+  // mute()/unMute() state can desync from the volume slider on some players.
   currentStationId = stationId;
   ytPlayer.loadVideoById(station.video);
+  ytPlayer.setVolume(0);
   ytPlayer.playVideo();
   isPlaying = true;
 
   setTimeout(() => {
-    ytPlayer.setVolume(currentVolume);
     if (!isMuted) {
-      ytPlayer.unMute();
+      ytPlayer.setVolume(currentVolume);
     }
     isTuning = false;
     setAllStationStatus("● TUNED", currentStationId);
@@ -972,10 +975,10 @@ document.getElementById("btn-mute").addEventListener("click", (e) => {
   e.stopPropagation();
   if (!ytReady) return;
   if (isMuted) {
-    ytPlayer.unMute();
+    ytPlayer.setVolume(currentVolume);
     document.getElementById("btn-mute").textContent = "MUTE";
   } else {
-    ytPlayer.mute();
+    ytPlayer.setVolume(0);
     document.getElementById("btn-mute").textContent = "UNMUTE";
   }
   isMuted = !isMuted;
@@ -986,6 +989,10 @@ const volumeValue = document.getElementById("volume-value");
 volumeSlider.addEventListener("input", (e) => {
   currentVolume = parseInt(e.target.value, 10);
   volumeValue.textContent = currentVolume;
+  if (isMuted) {
+    isMuted = false;
+    document.getElementById("btn-mute").textContent = "MUTE";
+  }
   if (ytReady) {
     ytPlayer.setVolume(currentVolume);
   }
@@ -1110,7 +1117,8 @@ function playTabSwitchSound() {
 
 let geigerOn = false;
 let geigerTimer = null;
-let radAlertShown = false;
+let radAlertActive = false;
+let radAlertHideTimer = null;
 
 function playGeigerTick() {
   ensureAudioCtx();
@@ -1178,17 +1186,25 @@ document.getElementById("geiger-toggle").addEventListener("click", () => {
   }
 });
 
-function updateRadAlert(precipChance) {
+function showRadAlertBanner() {
   const alertEl = document.getElementById("rad-alert");
   if (!alertEl) return;
-  if (precipChance >= 60 && !radAlertShown) {
-    radAlertShown = true;
-    alertEl.classList.add("show");
-    setTimeout(() => {
-      alertEl.classList.remove("show");
-    }, 6000);
-  } else if (precipChance < 60) {
-    radAlertShown = false;
+  alertEl.classList.add("show");
+  if (radAlertHideTimer) clearTimeout(radAlertHideTimer);
+  radAlertHideTimer = setTimeout(() => {
+    alertEl.classList.remove("show");
+  }, 6000);
+}
+
+function updateRadAlert(precipChance) {
+  if (precipChance >= 60) {
+    const justCrossed = !radAlertActive;
+    radAlertActive = true;
+    if (justCrossed) {
+      showRadAlertBanner();
+    }
+  } else {
+    radAlertActive = false;
   }
   setGeigerReadout();
 }
