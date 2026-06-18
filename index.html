@@ -614,7 +614,7 @@
           <span class="dim" id="volume-value" style="font-size:11px;">70</span>
         </div>
         <div id="yt-player"></div>
-        <div class="footer-note">audio requires a tap to start on mobile browsers</div>
+        <div class="footer-note">tap a station to tune, then press PLAY to start audio</div>
       </div>
 
       <div class="panel" id="panel-log">
@@ -927,32 +927,26 @@ function tuneToStation(stationId) {
   const playBtn = document.getElementById("btn-playpause");
   setAllStationStatus("● TUNING...", stationId);
   transmission.textContent = "...searching frequency...";
-  playBtn.textContent = "❙❙ PAUSE";
 
   playTuningStatic(1800);
 
-  // Mobile browsers (especially iOS Safari) gate autoplay specifically on the
-  // player's mute() flag, not just volume level — calling mute() right before
-  // playVideo() is what actually grants permission to play without a video-
-  // specific tap. We unmute again immediately after, then rely on setVolume()
-  // for the audible tuning-static effect, since that's just loudness, not the
-  // autoplay permission gate itself.
+  // Load the new station but do NOT call playVideo() here. Mobile browsers
+  // (particularly iOS Safari) only reliably honor playVideo() when it's
+  // called directly inside a fresh, dedicated tap on a control — not as a
+  // side effect of tuning, and not from inside a setTimeout. So we just cue
+  // the video here, then require an explicit tap on PLAY to actually start
+  // audio. This two-tap flow (tap station, then tap PLAY) is what's been
+  // confirmed to reliably work on mobile.
   currentStationId = stationId;
-  ytPlayer.mute();
   ytPlayer.loadVideoById(station.video);
-  ytPlayer.playVideo();
-  ytPlayer.unMute();
-  ytPlayer.setVolume(0);
-  isPlaying = true;
+  ytPlayer.setVolume(currentVolume);
+  isPlaying = false;
+  playBtn.textContent = "▶ PLAY";
 
   setTimeout(() => {
-    if (!isMuted) {
-      ytPlayer.setVolume(currentVolume);
-    }
     isTuning = false;
-    setAllStationStatus("● TUNED", currentStationId);
-    transmission.textContent = `...signal locked. transmission clear. holding frequency ${station.freq}...`;
-    playBtn.textContent = "❙❙ PAUSE";
+    setAllStationStatus("● READY", currentStationId);
+    transmission.textContent = `...frequency ${station.freq} acquired. press play to listen...`;
   }, 1800);
 }
 
