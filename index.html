@@ -926,14 +926,23 @@ function tuneToStation(stationId) {
   transmission.textContent = "...searching frequency...";
   playBtn.textContent = "❙❙ PAUSE";
 
-  if (isPlaying) {
-    ytPlayer.pauseVideo();
-  }
+  // --- MOBILE FIX START ---
+  // Mobile browsers block video/audio that starts inside a setTimeout.
+  // We must load and play the video SYNCHRONOUSLY within this tap event handler.
+  // We mute it immediately so it plays silently while the static sound effect happens.
+  currentStationId = stationId;
+  ytPlayer.mute();
+  ytPlayer.loadVideoById(station.video);
+  ytPlayer.playVideo();
+  // --- MOBILE FIX END ---
+
   playTuningStatic(1800);
 
   setTimeout(() => {
-    currentStationId = stationId;
-    ytPlayer.loadVideoById(station.video);
+    // Unmute (if not globally muted) and set volume after the static finishes
+    if (!isMuted) {
+      ytPlayer.unMute();
+    }
     ytPlayer.setVolume(currentVolume);
     isTuning = false;
     isPlaying = true;
