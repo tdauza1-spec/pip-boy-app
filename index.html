@@ -842,7 +842,7 @@ function onYouTubeIframeAPIReady() {
     height: '1',
     width: '1',
     videoId: STATIONS[0].video,
-    playerVars: { autoplay: 0, controls: 0 },
+    playerVars: { autoplay: 0, controls: 0, playsinline: 1 },
     events: {
       'onReady': () => {
         ytReady = true;
@@ -931,15 +931,18 @@ function tuneToStation(stationId) {
 
   playTuningStatic(1800);
 
-  // Load and start the new station immediately, synchronously within this click
-  // gesture — mobile browsers generally won't honor autoplay calls made from
-  // inside a later setTimeout callback, only from the original gesture itself.
-  // We silence it via volume (not mute()) during the static window, since
-  // mute()/unMute() state can desync from the volume slider on some players.
+  // Mobile browsers (especially iOS Safari) gate autoplay specifically on the
+  // player's mute() flag, not just volume level — calling mute() right before
+  // playVideo() is what actually grants permission to play without a video-
+  // specific tap. We unmute again immediately after, then rely on setVolume()
+  // for the audible tuning-static effect, since that's just loudness, not the
+  // autoplay permission gate itself.
   currentStationId = stationId;
+  ytPlayer.mute();
   ytPlayer.loadVideoById(station.video);
-  ytPlayer.setVolume(0);
   ytPlayer.playVideo();
+  ytPlayer.unMute();
+  ytPlayer.setVolume(0);
   isPlaying = true;
 
   setTimeout(() => {
