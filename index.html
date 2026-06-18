@@ -104,6 +104,34 @@
     opacity: 0;
     pointer-events: none;
   }
+  .poweron-overlay {
+    position: absolute;
+    inset: 0;
+    background: #0a0e0a;
+    z-index: 11;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    opacity: 1;
+    transition: opacity 400ms ease-out;
+  }
+  .poweron-overlay.hidden {
+    opacity: 0;
+    pointer-events: none;
+  }
+  .poweron-text {
+    color: #ffb000;
+    text-shadow: 0 0 4px #ffb000, 0 0 10px rgba(255,176,0,0.35);
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 14px;
+    letter-spacing: 3px;
+    animation: poweronPulse 1.6s ease-in-out infinite;
+  }
+  @keyframes poweronPulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.35; }
+  }
   .boot-text {
     margin: 0;
     color: #ffb000;
@@ -493,7 +521,10 @@
   </div>
 
   <div class="screen">
-    <div class="boot-overlay" id="boot-overlay">
+    <div class="poweron-overlay" id="poweron-overlay">
+      <div class="poweron-text">TOUCH TO POWER ON</div>
+    </div>
+    <div class="boot-overlay hidden" id="boot-overlay">
       <pre class="boot-text" id="boot-text"></pre>
     </div>
     <div class="scanlines"></div>
@@ -1364,7 +1395,16 @@ document.getElementById("btn-journal-save").addEventListener("click", () => {
 
 renderJournal();
 
-runBootSequence();
+function startPowerOn() {
+  ensureAudioCtx();
+  const powerOverlay = document.getElementById("poweron-overlay");
+  const bootOverlay = document.getElementById("boot-overlay");
+  powerOverlay.classList.add("hidden");
+  bootOverlay.classList.remove("hidden");
+  runBootSequence();
+}
+document.getElementById("poweron-overlay").addEventListener("click", startPowerOn, { once: true });
+
 loadWeather();
 initMap();
 initRadarMap();
