@@ -145,9 +145,9 @@
   .tab {
     flex: 1;
     text-align: center;
-    font-size: 12px;
-    letter-spacing: 1.5px;
-    padding: 7px 0;
+    font-size: 10.5px;
+    letter-spacing: 0.5px;
+    padding: 7px 2px;
     cursor: pointer;
     color: #ffb000;
     background: transparent;
@@ -242,7 +242,44 @@
   .home-status-line {
     text-align: center;
     font-size: 11px;
-    letter-spacing: 2px;
+    letter-spacing: 1px;
+    line-height: 1.5;
+    padding: 0 6px;
+  }
+  .geiger-toggle {
+    font-size: 11px;
+    letter-spacing: 1px;
+    border: 1px solid #7a4a00;
+    color: #9c7233;
+    padding: 4px 10px;
+    cursor: pointer;
+    user-select: none;
+  }
+  .geiger-toggle.on {
+    color: #ffb000;
+    border-color: #ffb000;
+  }
+  .geiger-readout {
+    font-size: 11px;
+    margin-top: 8px;
+    letter-spacing: 0.5px;
+  }
+  .rad-alert {
+    display: none;
+    text-align: center;
+    font-size: 12px;
+    letter-spacing: 1px;
+    color: #ffb000;
+    border: 1px solid #ffb000;
+    background: rgba(255,176,0,0.1);
+    padding: 8px;
+    margin-top: 12px;
+    animation: alertPulse 1s infinite;
+  }
+  .rad-alert.show { display: block; }
+  @keyframes alertPulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
   }
   .station {
     display: flex;
@@ -317,6 +354,46 @@
     cursor: pointer;
   }
   .footer-note { margin-top: 16px; font-size: 11px; color: #9c7233; }
+  .journal-input {
+    width: 100%;
+    background: #150d02;
+    border: 1px solid #7a4a00;
+    color: #ffb000;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 13px;
+    padding: 10px;
+    resize: vertical;
+    outline: none;
+  }
+  .journal-input::placeholder { color: #5a3d1a; }
+  .journal-entry {
+    border: 1px solid #7a4a00;
+    padding: 10px;
+    margin-bottom: 10px;
+    position: relative;
+  }
+  .journal-entry-time {
+    font-size: 10px;
+    color: #9c7233;
+    letter-spacing: 0.5px;
+    margin-bottom: 6px;
+  }
+  .journal-entry-text {
+    font-size: 13px;
+    white-space: pre-wrap;
+    word-break: break-word;
+    padding-right: 20px;
+  }
+  .journal-entry-delete {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    cursor: pointer;
+    color: #9c7233;
+    font-size: 14px;
+    line-height: 1;
+  }
+  .journal-entry-delete:hover { color: #ffb000; }
   .bottombar {
     display: flex;
     align-items: center;
@@ -428,6 +505,7 @@
         <div class="tab" data-tab="data">DATA</div>
         <div class="tab" data-tab="map">MAP</div>
         <div class="tab" data-tab="radio">RADIO</div>
+        <div class="tab" data-tab="log">LOG</div>
       </div>
 
       <div class="panel active" id="panel-stat">
@@ -445,6 +523,16 @@
         <div class="divider">
           <div class="home-status-line dim" id="home-status-line">SYSTEM NOMINAL</div>
         </div>
+
+        <div class="divider geiger-section">
+          <div class="row" style="align-items:center;">
+            <span style="font-size:13px;">RAD DETECTOR</span>
+            <div class="geiger-toggle" id="geiger-toggle">OFF</div>
+          </div>
+          <div class="geiger-readout dim" id="geiger-readout">standing by...</div>
+        </div>
+
+        <div class="rad-alert" id="rad-alert">⚠ RAD STORM INCOMING ⚠</div>
       </div>
 
       <div class="panel" id="panel-data">
@@ -498,6 +586,19 @@
         <div class="footer-note">audio requires a tap to start on mobile browsers</div>
       </div>
 
+      <div class="panel" id="panel-log">
+        <div style="border-bottom:1px solid #7a4a00; padding-bottom:8px; margin-bottom:16px;">HOLOJOURNAL</div>
+        <textarea id="journal-input" class="journal-input" placeholder="record a new entry..." rows="3"></textarea>
+        <div class="radio-controls" style="margin-top:8px;">
+          <div class="radio-btn" id="btn-journal-save">SAVE ENTRY</div>
+        </div>
+        <div class="divider" id="journal-list-wrap">
+          <div id="journal-list"></div>
+          <div class="footer-note" id="journal-empty">no entries recorded yet</div>
+        </div>
+        <div class="footer-note">entries are stored on this device only</div>
+      </div>
+
     </div>
   </div>
 
@@ -507,6 +608,7 @@
       <div class="dot" data-tab="data"></div>
       <div class="dot" data-tab="map"></div>
       <div class="dot" data-tab="radio"></div>
+      <div class="dot" data-tab="log"></div>
     </div>
     <div class="knob" id="knob">
       <div class="knob-indicator" id="knob-indicator"></div>
@@ -552,6 +654,8 @@ function weatherCodeToIcon(code) {
   return WEATHER_ICONS.cloud;
 }
 
+let currentPrecipChance = 0;
+
 async function loadWeather() {
   const body = document.getElementById("weather-body");
   const updated = document.getElementById("weather-updated");
@@ -565,6 +669,8 @@ async function loadWeather() {
     const curText = weatherCodeToText(data.current.weather_code);
     const todayHigh = Math.round(data.daily.temperature_2m_max[0]);
     const todayPrecip = data.daily.precipitation_probability_max[0];
+    currentPrecipChance = todayPrecip;
+    updateRadAlert(todayPrecip);
 
     let forecastHtml = "";
     for (let i = 1; i <= 4; i++) {
@@ -632,17 +738,33 @@ const STATUS_LINES = [
   "STANDING BY",
   "NO ALERTS"
 ];
+
+const WASTELAND_TIPS = [
+  "Raising your Luck raises all of your skill values and improves your critical chance with all weapons.",
+  "The light generated form your Pip-Boy light actually makes you less stealthy. If you want to effectively sneak, turn it off.",
+  "Running is noisier than walking and makes you easier to detect, even if you are sneaking.",
+  "Sleeping in a rented or owned bed will give you a Well Rested bonus that boosts your earned XP for several hours.",
+  "Drinking water provides healing but may increase your Radiation Level.",
+  "If you start a fight you can't finish, try putting away your weapon. Your opponent just might forgive you...",
+  "Want to prevent an enemy from fleeing? Cripple the legs.",
+  "\"Prospector\" is a polite word for \"scavenger\".",
+  "Ghouls, both \"normal\" and feral, are not only immune to radiation...they are healed by it.",
+  "The Pip-Boy 3000 is a safe, secure piece of pre-War technology. It guarantees privacy, safety, and guidance in times of need."
+];
+
+const STATUS_POOL = [...STATUS_LINES, ...WASTELAND_TIPS];
+
 function rotateStatusLine() {
   const el = document.getElementById("home-status-line");
   if (!el) return;
-  const pick = STATUS_LINES[Math.floor(Math.random() * STATUS_LINES.length)];
+  const pick = STATUS_POOL[Math.floor(Math.random() * STATUS_POOL.length)];
   el.textContent = pick;
 }
 
 const tabs = document.querySelectorAll(".tab");
 const dots = document.querySelectorAll(".dot");
 const panels = document.querySelectorAll(".panel");
-const tabOrder = ["stat", "data", "map", "radio"];
+const tabOrder = ["stat", "data", "map", "radio", "log"];
 const knobIndicator = document.getElementById("knob-indicator");
 
 function setTab(name) {
@@ -651,7 +773,7 @@ function setTab(name) {
   dots.forEach(d => d.classList.toggle("active", d.dataset.tab === name));
   panels.forEach(p => p.classList.toggle("active", p.id === "panel-" + name));
   const idx = tabOrder.indexOf(name);
-  knobIndicator.style.transform = `translateX(-50%) rotate(${idx * 90}deg)`;
+  knobIndicator.style.transform = `translateX(-50%) rotate(${idx * 72}deg)`;
   if (name === "map" && map) {
     setTimeout(() => map.invalidateSize(), 50);
   }
@@ -948,13 +1070,98 @@ function playTabSwitchSound() {
   noise.buffer = buffer;
   const filter = audioCtx.createBiquadFilter();
   filter.type = "highpass";
-  filter.frequency.value = 1200;
+  filter.frequency.value = 900 + Math.random() * 700;
   const gain = audioCtx.createGain();
-  gain.gain.value = 0.22;
+  gain.gain.value = 0.18 + Math.random() * 0.08;
   noise.connect(filter);
   filter.connect(gain);
   gain.connect(audioCtx.destination);
   noise.start();
+}
+
+let geigerOn = false;
+let geigerTimer = null;
+let radAlertShown = false;
+
+function playGeigerTick() {
+  ensureAudioCtx();
+  const duration = 0.025;
+  const bufferSize = Math.floor(audioCtx.sampleRate * duration);
+  const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+  const data = buffer.getChannelData(0);
+  for (let i = 0; i < bufferSize; i++) {
+    const fadeOut = (bufferSize - i) / bufferSize;
+    data[i] = (Math.random() * 2 - 1) * fadeOut;
+  }
+  const noise = audioCtx.createBufferSource();
+  noise.buffer = buffer;
+  const filter = audioCtx.createBiquadFilter();
+  filter.type = "highpass";
+  filter.frequency.value = 2500;
+  const gain = audioCtx.createGain();
+  gain.gain.value = 0.28;
+  noise.connect(filter);
+  filter.connect(gain);
+  gain.connect(audioCtx.destination);
+  noise.start();
+}
+
+function scheduleNextGeigerTick() {
+  if (!geigerOn) return;
+  // base interval 900ms, scales down toward 150ms as precip chance rises toward 100%
+  const precipFactor = Math.min(currentPrecipChance, 100) / 100;
+  const baseInterval = 900 - precipFactor * 700;
+  const jitter = baseInterval * 0.5;
+  const interval = baseInterval + (Math.random() * jitter - jitter / 2);
+  geigerTimer = setTimeout(() => {
+    playGeigerTick();
+    scheduleNextGeigerTick();
+  }, Math.max(interval, 100));
+}
+
+function setGeigerReadout() {
+  const readout = document.getElementById("geiger-readout");
+  if (!readout) return;
+  if (!geigerOn) {
+    readout.textContent = "standing by...";
+    return;
+  }
+  if (currentPrecipChance >= 60) {
+    readout.textContent = "elevated activity detected";
+  } else if (currentPrecipChance >= 30) {
+    readout.textContent = "mild background radiation";
+  } else {
+    readout.textContent = "background levels normal";
+  }
+}
+
+document.getElementById("geiger-toggle").addEventListener("click", () => {
+  ensureAudioCtx();
+  geigerOn = !geigerOn;
+  const toggle = document.getElementById("geiger-toggle");
+  toggle.textContent = geigerOn ? "ON" : "OFF";
+  toggle.classList.toggle("on", geigerOn);
+  setGeigerReadout();
+  if (geigerOn) {
+    scheduleNextGeigerTick();
+  } else if (geigerTimer) {
+    clearTimeout(geigerTimer);
+  }
+});
+
+function updateRadAlert(precipChance) {
+  const alertEl = document.getElementById("rad-alert");
+  if (!alertEl) return;
+  if (precipChance >= 60 && !radAlertShown) {
+    radAlertShown = true;
+    alertEl.classList.add("show");
+    setTimeout(() => {
+      alertEl.classList.remove("show");
+    }, 6000);
+  } else if (precipChance < 60) {
+    radAlertShown = false;
+  }
+  setGeigerReadout();
 }
 
 const BOOT_LINES = [
@@ -971,12 +1178,82 @@ const BOOT_LINES = [
   "WELCOME, WANDERER."
 ];
 
+function playBootPowerOn() {
+  try {
+    ensureAudioCtx();
+    const now = audioCtx.currentTime;
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.type = "sawtooth";
+    osc.frequency.setValueAtTime(80, now);
+    osc.frequency.exponentialRampToValueAtTime(620, now + 0.35);
+    gain.gain.setValueAtTime(0.0001, now);
+    gain.gain.exponentialRampToValueAtTime(0.06, now + 0.08);
+    gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.4);
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+    osc.start(now);
+    osc.stop(now + 0.42);
+  } catch (e) { /* audio not available yet, ignore */ }
+}
+
+function playBootTypeTick() {
+  try {
+    ensureAudioCtx();
+    const bufferSize = Math.floor(audioCtx.sampleRate * 0.012);
+    const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+    const data = buffer.getChannelData(0);
+    for (let i = 0; i < bufferSize; i++) {
+      const fadeOut = (bufferSize - i) / bufferSize;
+      data[i] = (Math.random() * 2 - 1) * fadeOut;
+    }
+    const noise = audioCtx.createBufferSource();
+    noise.buffer = buffer;
+    const filter = audioCtx.createBiquadFilter();
+    filter.type = "highpass";
+    filter.frequency.value = 3500 + Math.random() * 1500;
+    const gain = audioCtx.createGain();
+    gain.gain.value = 0.05;
+    noise.connect(filter);
+    filter.connect(gain);
+    gain.connect(audioCtx.destination);
+    noise.start();
+  } catch (e) { /* audio not available yet, ignore */ }
+}
+
+function playBootLineCrackle() {
+  try {
+    ensureAudioCtx();
+    const duration = 0.08;
+    const bufferSize = Math.floor(audioCtx.sampleRate * duration);
+    const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+    const data = buffer.getChannelData(0);
+    for (let i = 0; i < bufferSize; i++) {
+      const fadeOut = (bufferSize - i) / bufferSize;
+      data[i] = (Math.random() * 2 - 1) * fadeOut * 0.7;
+    }
+    const noise = audioCtx.createBufferSource();
+    noise.buffer = buffer;
+    const filter = audioCtx.createBiquadFilter();
+    filter.type = "bandpass";
+    filter.frequency.value = 2200;
+    const gain = audioCtx.createGain();
+    gain.gain.value = 0.12;
+    noise.connect(filter);
+    filter.connect(gain);
+    gain.connect(audioCtx.destination);
+    noise.start();
+  } catch (e) { /* audio not available yet, ignore */ }
+}
+
 function runBootSequence() {
   const overlay = document.getElementById("boot-overlay");
   const textEl = document.getElementById("boot-text");
   let lineIndex = 0;
   let charIndex = 0;
   let rendered = "";
+
+  playBootPowerOn();
 
   function finishBoot() {
     overlay.classList.add("hidden");
@@ -992,11 +1269,18 @@ function runBootSequence() {
     }
     const line = BOOT_LINES[lineIndex];
     if (charIndex < line.length) {
-      rendered += line[charIndex];
+      const ch = line[charIndex];
+      if (ch !== " " && Math.random() < 0.6) {
+        playBootTypeTick();
+      }
+      rendered += ch;
       charIndex++;
       textEl.innerHTML = rendered + '<span class="boot-cursor"></span>';
       setTimeout(typeNext, 22);
     } else {
+      if (line.includes("OK")) {
+        playBootLineCrackle();
+      }
       rendered += "\n";
       lineIndex++;
       charIndex = 0;
@@ -1007,6 +1291,86 @@ function runBootSequence() {
 
   setTimeout(finishBoot, 9000);
 }
+
+const JOURNAL_KEY = "pipboy_personal_journal_entries";
+
+function loadJournalEntries() {
+  try {
+    const raw = localStorage.getItem(JOURNAL_KEY);
+    return raw ? JSON.parse(raw) : [];
+  } catch (e) {
+    return [];
+  }
+}
+
+function saveJournalEntries(entries) {
+  try {
+    localStorage.setItem(JOURNAL_KEY, JSON.stringify(entries));
+  } catch (e) {
+    // localStorage unavailable (private browsing, storage full, etc.) — fail silently
+  }
+}
+
+function renderJournal() {
+  const entries = loadJournalEntries();
+  const listEl = document.getElementById("journal-list");
+  const emptyEl = document.getElementById("journal-empty");
+  if (!listEl) return;
+
+  if (entries.length === 0) {
+    listEl.innerHTML = "";
+    if (emptyEl) emptyEl.style.display = "block";
+    return;
+  }
+  if (emptyEl) emptyEl.style.display = "none";
+
+  listEl.innerHTML = entries
+    .slice()
+    .reverse()
+    .map(entry => {
+      const d = new Date(entry.timestamp);
+      const dateStr = d.toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
+      const timeStr = d.toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" });
+      const escaped = entry.text
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;");
+      return `
+        <div class="journal-entry" data-id="${entry.id}">
+          <div class="journal-entry-delete" data-delete-id="${entry.id}">✕</div>
+          <div class="journal-entry-time">${dateStr} — ${timeStr}</div>
+          <div class="journal-entry-text">${escaped}</div>
+        </div>`;
+    })
+    .join("");
+
+  listEl.querySelectorAll("[data-delete-id]").forEach(btn => {
+    btn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      const id = btn.getAttribute("data-delete-id");
+      const remaining = loadJournalEntries().filter(en => String(en.id) !== String(id));
+      saveJournalEntries(remaining);
+      renderJournal();
+    });
+  });
+}
+
+document.getElementById("btn-journal-save").addEventListener("click", () => {
+  const input = document.getElementById("journal-input");
+  const text = input.value.trim();
+  if (!text) return;
+  const entries = loadJournalEntries();
+  entries.push({
+    id: Date.now(),
+    text: text,
+    timestamp: new Date().toISOString()
+  });
+  saveJournalEntries(entries);
+  input.value = "";
+  renderJournal();
+});
+
+renderJournal();
 
 runBootSequence();
 loadWeather();
