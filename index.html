@@ -575,6 +575,10 @@
           <span>98.7 MHz — TALK NEW VEGAS</span>
           <span class="status">STANDBY</span>
         </div>
+        <div class="station" id="station-robco" data-video="OxiYsxbGiIw">
+          <span>91.5 MHz — ROBCO COMPANY BROADCAST</span>
+          <span class="status">STANDBY</span>
+        </div>
         <div class="transmission" id="transmission-text">tap a frequency to tune in...</div>
         <div class="radio-controls">
           <div class="radio-btn" id="btn-playpause">▶ PLAY</div>
@@ -802,8 +806,9 @@ let isTuning = false;
 let currentVolume = 70;
 
 const STATIONS = [
-  { id: "station-rnv", video: "kXfQ7AB-hEM", label: "RADIO NEW VEGAS", freq: "104.3" },
-  { id: "station-talk", video: "gzF7aHxk4Y4", label: "TALK NEW VEGAS", freq: "98.7" }
+  { id: "station-rnv", video: "kXfQ7AB-hEM", label: "RADIO NEW VEGAS", freq: "104.3", maxSeekSeconds: 2400 },
+  { id: "station-talk", video: "gzF7aHxk4Y4", label: "TALK NEW VEGAS", freq: "98.7", maxSeekSeconds: 2400 },
+  { id: "station-robco", video: "OxiYsxbGiIw", label: "ROBCO COMPANY BROADCAST", freq: "91.5", maxSeekSeconds: 2400 }
 ];
 
 function onYouTubeIframeAPIReady() {
@@ -907,7 +912,8 @@ function tuneToStation(stationId) {
   // audio. This two-tap flow (tap station, then tap PLAY) is what's been
   // confirmed to reliably work on mobile.
   currentStationId = stationId;
-  ytPlayer.loadVideoById(station.video);
+  const seekOffset = Math.floor(Math.random() * (station.maxSeekSeconds || 2400));
+  ytPlayer.loadVideoById(station.video, seekOffset);
   ytPlayer.setVolume(currentVolume);
   isPlaying = false;
   playBtn.textContent = "▶ PLAY";
