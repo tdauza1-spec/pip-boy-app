@@ -696,8 +696,11 @@ async function loadWeather() {
         <span class="bigtemp">${curTemp}°</span>
         <span style="font-size:16px;">${curText.toUpperCase()}</span>
       </div>
-      <div class="muted" style="font-size:13px; margin-bottom:20px;">
+      <div class="muted" style="font-size:13px; margin-bottom:6px;">
         Baton Rouge, LA — high ${todayHigh}° — precip chance ${todayPrecip}%
+      </div>
+      <div class="dim" style="font-size:11px; margin-bottom:20px;">
+        raw weather_code: ${data.current.weather_code}
       </div>
       <div style="font-size:14px; margin-bottom:10px; border-top:1px solid #7a4a00; padding-top:12px;">4-DAY OUTLOOK</div>
       <div class="forecast-grid">${forecastHtml}</div>
