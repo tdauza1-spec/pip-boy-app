@@ -555,7 +555,7 @@
           <div class="radar-controls">
             <div class="radio-btn" id="btn-radar-playpause">❙❙ PAUSE</div>
           </div>
-          <div class="footer-note" style="margin-top:8px;">Weather data by <a href="https://www.rainviewer.com" target="_blank" rel="noopener" style="color:#9c7233;">RainViewer</a></div>
+          <div class="footer-note" style="margin-top:8px;">Weather data by <a href="https://rainbow.ai" target="_blank" rel="noopener" style="color:#9c7233;">Rainbow Weather</a></div>
         </div>
       </div>
 
@@ -965,12 +965,14 @@ function initMap() {
 }
 
 let radarMap = null;
-let radarFrames = [];
-let radarLayers = [];
+let radarFrameTimes = [];   // array of snapshot timestamps (seconds), oldest to newest
+let radarCurrentLayer = null;
 let radarPosition = 0;
 let radarTimer = null;
 let radarPlaying = true;
-const RADAR_FRAME_DELAY_MS = 600;
+const RADAR_FRAME_DELAY_MS = 1200;
+const RADAR_FRAME_COUNT = 12; // 2 hours back in 10-min steps
+const RAINBOW_API_KEY = "09bdb2abb82048efaf374d3b82f278a8";
 
 function initRadarMap() {
   radarMap = L.map('radar-map', { zoomControl: false, attributionControl: false, dragging: true, scrollWheelZoom: false })
@@ -982,27 +984,28 @@ function initRadarMap() {
   loadRadarFrames();
 }
 
+function radarTileUrlTemplate(snapshotTime) {
+  return `https://api.rainbow.ai/tiles/v1/radars/${snapshotTime}/{z}/{x}/{y}?token=${RAINBOW_API_KEY}&color=0`;
+}
+
 async function loadRadarFrames() {
   console.log("[radar] loadRadarFrames called at", new Date().toLocaleTimeString());
   try {
-    const res = await fetch('https://api.rainviewer.com/public/weather-maps.json');
-    if (!res.ok) throw new Error('radar fetch failed');
+    const res = await fetch(`https://api.rainbow.ai/tiles/v1/snapshot?layer=radars&token=${RAINBOW_API_KEY}`);
+    if (!res.ok) throw new Error('snapshot fetch failed: ' + res.status);
     const data = await res.json();
-    const pastFrames = (data.radar && data.radar.past) ? data.radar.past : [];
-    if (!pastFrames.length) throw new Error('no frames');
+    const latestSnapshot = data.snapshot;
+    if (!latestSnapshot) throw new Error('no snapshot returned');
 
-    radarFrames = pastFrames;
-    radarLayers.forEach(l => radarMap.removeLayer(l));
-    radarLayers = radarFrames.map(frame => {
-      return L.tileLayer(`https://tilecache.rainviewer.com${frame.path}/256/{z}/{x}/{y}/2/1_1.png`, {
-        opacity: 0,
-        zIndex: 5
-      }).addTo(radarMap);
-    });
-    radarPosition = radarLayers.length - 1;
+    // Build a list of past snapshot timestamps, 10-min apart, oldest to newest
+    radarFrameTimes = [];
+    for (let i = RADAR_FRAME_COUNT - 1; i >= 0; i--) {
+      radarFrameTimes.push(latestSnapshot - i * 600);
+    }
+    radarPosition = radarFrameTimes.length - 1;
     showRadarFrame(radarPosition);
     startRadarAnimation();
-    console.log("[radar] success, newest frame time:", new Date(radarFrames[radarFrames.length - 1].time * 1000).toLocaleTimeString());
+    console.log("[radar] success, newest frame time:", new Date(latestSnapshot * 1000).toLocaleTimeString());
   } catch (e) {
     console.log("[radar] FAILED:", e.message);
     document.getElementById("radar-timestamp").textContent = "signal unavailable";
@@ -1010,21 +1013,32 @@ async function loadRadarFrames() {
 }
 
 function showRadarFrame(idx) {
-  radarLayers.forEach((layer, i) => {
-    layer.setOpacity(i === idx ? 0.75 : 0);
+  const frameTime = radarFrameTimes[idx];
+  if (!frameTime || !radarMap) return;
+
+  const newLayer = L.tileLayer(radarTileUrlTemplate(frameTime), {
+    opacity: 0,
+    zIndex: 5
+  }).addTo(radarMap);
+
+  // Fade in the new layer, then remove the previous one once loaded
+  newLayer.once('load', () => {
+    newLayer.setOpacity(0.75);
+    if (radarCurrentLayer) {
+      radarMap.removeLayer(radarCurrentLayer);
+    }
+    radarCurrentLayer = newLayer;
   });
-  const frame = radarFrames[idx];
-  if (frame) {
-    const d = new Date(frame.time * 1000);
-    document.getElementById("radar-timestamp").textContent = d.toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" });
-  }
+
+  const d = new Date(frameTime * 1000);
+  document.getElementById("radar-timestamp").textContent = d.toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" });
 }
 
 function startRadarAnimation() {
   if (radarTimer) clearInterval(radarTimer);
   radarTimer = setInterval(() => {
-    if (!radarLayers.length) return;
-    radarPosition = (radarPosition + 1) % radarLayers.length;
+    if (!radarFrameTimes.length) return;
+    radarPosition = (radarPosition + 1) % radarFrameTimes.length;
     showRadarFrame(radarPosition);
   }, RADAR_FRAME_DELAY_MS);
 }
