@@ -1423,6 +1423,7 @@ loadWeather();
 initMap();
 initRadarMap();
 setInterval(loadWeather, 15 * 60 * 1000);
+setInterval(loadRadarFrames, 10 * 60 * 1000);
 updateClock();
 setInterval(updateClock, 1000);
 rotateStatusLine();
